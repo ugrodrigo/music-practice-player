@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Music Practice Player</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main class="workspace">
+    <header class="app-header">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">♫</span><div><p class="eyebrow">YOUR PERSONAL PRACTICE SPACE</p><h1>Music Practice Player</h1></div></div>
+      <span class="local-badge"><span aria-hidden="true">●</span> Local audio. Just you.</span>
+    </header>
+
+    <section class="player panel" aria-label="Audio player">
+      <div class="track-row">
+        <div class="track-info"><p class="eyebrow">ON THE MUSIC STAND</p><h2 id="filename">Choose a song to get started</h2><p id="file-hint">Drop an audio file anywhere, or open one below.</p></div>
+        <button id="open-file" class="button button-outline" type="button"><span aria-hidden="true">＋</span> Open audio file</button>
+        <input id="file-input" type="file" accept="audio/*,.mp3,.wav,.m4a" hidden>
+      </div>
+      <div class="clock-row"><span id="current-time" class="clock" aria-label="Current playback time">00:00.0</span><span class="duration">/ <span id="duration">00:00.0</span></span></div>
+      <label class="sr-only" for="seek">Playback position</label>
+      <input id="seek" class="seek" type="range" min="0" max="0" step="0.01" value="0" disabled aria-valuetext="00:00.0">
+      <div class="transport-row">
+        <div class="transport">
+          <button id="back" class="button button-subtle" type="button" disabled aria-label="Seek backward 2 seconds">↶ <span>2s</span></button>
+          <button id="play" class="button button-primary" type="button" disabled><span id="play-icon" aria-hidden="true">▶</span> <span id="play-label">Play</span><kbd>Space</kbd></button>
+          <button id="forward" class="button button-subtle" type="button" disabled aria-label="Seek forward 2 seconds"><span>2s</span> ↷</button>
+        </div>
+        <div class="speed-control"><label for="speed">Playback speed</label><select id="speed" disabled><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="0.9">0.9×</option><option value="1" selected>1.0×</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option></select></div>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite">Ready when you are. Your audio stays on this device.</p>
+      <p id="storage-warning" class="warning" role="status" hidden></p>
+    </section>
+
+    <section class="cue-section" aria-labelledby="cue-heading">
+      <div class="section-heading"><div><p class="eyebrow">FIND YOUR WAY BACK</p><h2 id="cue-heading">Your cue points</h2></div><p><kbd>Shift</kbd> + <kbd>1–9</kbd> to set <span class="divider">/</span> <kbd>1–9</kbd> to jump</p></div>
+      <div id="cues" class="cue-grid"></div>
+      <p class="cue-footnote">Set a cue while listening. Jump back as often as you need.</p>
+    </section>
+
+    <footer class="shortcuts panel" aria-label="Keyboard shortcuts">
+      <p class="eyebrow">KEEP YOUR HANDS ON THE MUSIC</p>
+      <div class="shortcut-grid">
+        <span><kbd>Space</kbd> Play / pause</span><span><kbd>←</kbd> <kbd>→</kbd> Seek 2s</span><span><kbd>Shift</kbd> + <kbd>←</kbd> <kbd>→</kbd> Seek 5s</span><span><kbd>[</kbd> <kbd>]</kbd> Nudge 0.5s when paused</span><span><kbd>−</kbd> <kbd>=</kbd> Change speed</span>
+      </div>
+      <p class="shortcut-note">Shortcuts pause while you edit a cue name. Press Enter or Escape to finish editing.</p>
+    </footer>
+  </main>
+  <div id="drop-overlay" class="drop-overlay" hidden><div><span aria-hidden="true">↓</span><h2>Drop your next song</h2><p>Audio stays on your device.</p></div></div>
+</body>
+</html>
