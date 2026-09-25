@@ -89,6 +89,8 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
 .lyrics-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .lyrics-heading h2 { font-size: 20px; font-weight: 550; }
 .lyrics-heading a { color: var(--accent); font-size: 12px; text-decoration: none; }
+.lyrics-links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px 14px; }
+.lyrics-links a:hover { text-decoration: underline; }
 .lyrics-auto { display: flex; align-items: center; gap: 7px; font-size: 12px; margin-top: 16px; }
 .lyrics-auto input { accent-color: var(--accent); }
 .lyrics-note { color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 10px; }

@@ -17,6 +17,7 @@ Each cue has a large jump button, an editable name, a Set/Update button, and a R
 | Shortcut | Action |
 |---|---|
 | Space | Play / pause |
+| Backtick (`` ` ``) | Jump to the beginning; playing stays playing, paused stays paused |
 | Left / Right Arrow | Seek backward / forward 2 seconds |
 | Shift + Left / Right Arrow | Seek backward / forward 5 seconds |
 | Shift + 1–9 | Save current position to a cue |
@@ -31,6 +32,8 @@ Shortcuts work across the app except while typing in cue names or lyrics search 
 Load a song with **Auto-find lyrics** enabled. The app reads basic MP3 ID3v1 and ID3v2.2/2.3/2.4 title, artist, and album tags locally. Unsupported, compressed, or malformed tags fall back to the filename. Other formats, including WAV/M4A, currently use filename inference rather than embedded tags.
 
 Use a filename such as `Red Hot Chili Peppers - Scar Tissue.mp3`. If the artist cannot be inferred, enter it in the Lyrics panel and click **Find lyrics**. Artist and title are always editable. Files named `track01.mp3` without readable tags cannot be identified from their audio.
+
+**Find on Genius** opens a new tab searching Genius for the current artist and song, where you can explore lyrics, annotations, and song background. The link follows detected, corrected, or matched song details. It is a search link rather than an unverified direct song URL, requires both artist and title, and does not contact Genius until clicked.
 
 The app first requests a match using title, artist, available album information, and duration. An exact normalized artist/title match within two seconds of the track's duration can display automatically. Otherwise, search results let you choose a recording; closest durations appear first. Matching can still be wrong for alternate versions, so check the displayed artist/title/album and search again if needed.
 

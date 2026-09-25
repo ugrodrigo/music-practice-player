@@ -268,10 +268,13 @@
     const arrow = event.key === "ArrowLeft" || event.key === "ArrowRight";
     const fine = event.key === "[" || event.key === "]";
     const speed = event.key === "-" || event.key === "=";
-    if (!digit && !space && !arrow && !fine && !speed) return;
+    const beginning = event.key === "`" || (event.code === "Backquote" && !event.shiftKey);
+    if (!digit && !space && !arrow && !fine && !speed && !beginning) return;
     event.preventDefault();
     if (!ready) return;
-    if (digit) {
+    if (beginning) {
+      seekTo(0);
+    } else if (digit) {
       const index = Number(digit[1]) - 1;
       if (event.shiftKey) { if (!event.repeat) setCue(index); }
       else jumpCue(index);

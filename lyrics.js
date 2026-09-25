@@ -78,6 +78,15 @@ window.LyricsPanel = (() => {
   const syncSafe = (bytes, offset) => ((bytes[offset] & 127) * 2097152 + (bytes[offset + 1] & 127) * 16384 + (bytes[offset + 2] & 127) * 128 + (bytes[offset + 3] & 127));
   const ascii = (bytes) => new TextDecoder('windows-1252').decode(bytes);
 
+  function updateGeniusLink() {
+    const artist = $('artist').value.trim(), title = $('title').value.trim();
+    const link = $('genius');
+    link.hidden = !artist || !title;
+    if (link.hidden) { link.removeAttribute('href'); return; }
+    link.href = `https://genius.com/search?${new URLSearchParams({ q: `${artist} ${title}` })}`;
+    link.title = `Find ${title} by ${artist} on Genius for lyrics, annotations, and song background`;
+  }
+
   function decodeText(bytes) {
     const encoding = bytes[0];
     let content = bytes.subarray(1);
@@ -148,6 +157,7 @@ window.LyricsPanel = (() => {
     $('follow').checked = true;
     $('settings').open = true;
     $('artist').value = ''; $('title').value = '';
+    updateGeniusLink();
     for (const id of ['artist', 'title', 'search']) $(id).disabled = true;
     clearLyrics();
     status('Load a song to find its lyrics.');
@@ -169,6 +179,7 @@ window.LyricsPanel = (() => {
     $('results').hidden = true;
     $('artist').value = record.artistName;
     $('title').value = record.trackName;
+    updateGeniusLink();
     album = record.albumName;
     $('match').textContent = `${record.artistName} — ${record.trackName}${record.albumName ? ` · ${record.albumName}` : ''}`;
     $('match').hidden = false;
@@ -298,6 +309,7 @@ window.LyricsPanel = (() => {
     if (version !== revision) return;
     $('artist').value = info.artist;
     $('title').value = info.title;
+    updateGeniusLink();
     album = info.album;
     if ($('auto').checked && info.artist && info.title) findLyrics();
     else status($('auto').checked ? 'Check the song title and add an artist for a more accurate match, then choose Find lyrics.' : 'Automatic lookup is off. Choose Find lyrics when you want to search online.');
@@ -310,7 +322,7 @@ window.LyricsPanel = (() => {
     else if (fileKey && $('artist').value.trim() && $('title').value.trim()) findLyrics();
   });
   $('form').addEventListener('submit', (event) => { event.preventDefault(); $('artist').blur(); $('title').blur(); findLyrics(); });
-  for (const id of ['artist', 'title']) $(id).addEventListener('input', () => { cancel(); album = ''; $('results').hidden = true; status('Choose Find lyrics to search with these details.'); });
+  for (const id of ['artist', 'title']) $(id).addEventListener('input', () => { cancel(); album = ''; updateGeniusLink(); $('results').hidden = true; status('Choose Find lyrics to search with these details.'); });
   $('follow').addEventListener('change', () => { renderFollowMode(); update(playbackTime, playbackDuration, true); });
   const pauseFollowing = () => {
     if (!hasLyrics) return;
