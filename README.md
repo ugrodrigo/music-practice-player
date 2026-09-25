@@ -34,7 +34,11 @@ Use a filename such as `Red Hot Chili Peppers - Scar Tissue.mp3`. If the artist 
 
 The app first requests a match using title, artist, available album information, and duration. An exact normalized artist/title match within two seconds of the track's duration can display automatically. Otherwise, search results let you choose a recording; closest durations appear first. Matching can still be wrong for alternate versions, so check the displayed artist/title/album and search again if needed.
 
-Lyrics appear as plain text. If only timestamped lyrics are available, the timestamps are removed for reading; synchronized highlighting and scrolling are not implemented. Instrumental records are labeled clearly.
+The desktop layout keeps a compact player and cue grid on the left and lyrics visible on the right. Search settings collapse when lyrics load; open **Find or change lyrics** to correct the match. On narrow screens, lyrics appear immediately after the player and before cues.
+
+**Follow song** is enabled for each loaded song. When LRCLIB supplies timed lyrics, the current line is highlighted and centered using the audio position, including after cue jumps and seeks. LRC offsets and repeated timestamps are supported. With plain lyrics, scrolling follows the percentage of the song played; the panel labels this approximate because intros, solos, and uneven verse lengths can shift alignment. Playback speed changes work naturally because following uses the audio's position.
+
+Scroll or touch the lyric text to pause following, then check **Follow song** to resume at the current position. You can also disable it directly. Manual scrolling never seeks or pauses audio. Only the lyric panel scrolls automatically, not the page. Instrumental records are labeled clearly and have following disabled.
 
 Only the search details are sent to [LRCLIB](https://lrclib.net/docs), using its public API and an identifying client header. The audio file is never uploaded. There is no API key, dependency, proxy, or backend. Requests are sequential, spaced apart, have a timeout, and honor rate-limit retry instructions. A failed lookup does not interrupt audio playback or cues.
 
@@ -74,6 +78,8 @@ The app deliberately excludes loops, A/B repeat, waveforms, streaming services, 
 5. Reload, reopen the same file, and confirm saved lyrics return. Cached lyrics should also work offline.
 6. Disable automatic lookup, load another song, and confirm no search runs until **Find lyrics** is clicked.
 7. Change songs during a search; a late response must not replace the new song's panel. Try a nonexistent title or go offline; playback and cues should keep working.
+8. With timed lyrics, play and jump between cues; confirm the highlighted line follows immediately. Scroll manually and confirm following pauses; re-enable **Follow song** to catch up.
+9. With plain lyrics, seek to halfway through the song and confirm the lyric panel is approximately halfway scrolled. Check the start and end as well.
 
 The playback code remains in `app.js`; independent metadata parsing, LRCLIB requests, result selection, and caching live in `lyrics.js`.
 
@@ -84,3 +90,5 @@ Automated checks in headless Microsoft Edge opened the actual `index.html` throu
 Chrome was not installed in the implementation environment. Manual listening and real MP3/M4A samples still need the acceptance check above; automated WAV checks do not establish audible seeking latency or every codec's compatibility.
 
 After adding lyrics, the local-player regression checks passed again. Browser tests also covered filename and generated ID3 tag inference, exact and ambiguous matches, result selection, keyboard safety, cached reuse, automatic lookup opt-out, safe text rendering, timestamped-text fallback, no results, network failures, stale responses, and rate limits. A live LRCLIB lookup for Red Hot Chili Peppers / Scar Tissue succeeded from the `file://` page in Edge. No application JavaScript exceptions were observed.
+
+The compact layout and lyric following passed Edge checks at desktop (1366×768) and mobile (390×844) sizes. Tests covered above-fold lyric visibility, timed highlighting, cue jumps, manual scroll interruption/resume, percentage-based fallback, start/end positions, offsets, and repeated timestamps. Playback and lookup regression checks also passed after this update.

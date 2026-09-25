@@ -7,6 +7,70 @@ window.LyricsPanel = (() => {
   const client = 'Music Practice Player/1.1 (https://github.com/ugrodrigo/music-practice-player)';
   let fileKey = '', duration = 0, album = '', revision = 0, controller;
   let queue = Promise.resolve(), nextRequest = 0, blockedUntil = 0;
+  let timedLines = [], lineNodes = [], activeLine = -1;
+  let playbackTime = 0, playbackDuration = 0, hasLyrics = false;
+
+  function parseTimedLyrics(text) {
+    const offset = Number(/\[offset:([+-]?\d+)\]/i.exec(text)?.[1] || 0) / 1000;
+    const entries = [];
+    for (const line of text.split(/\r?\n/)) {
+      const stamps = [...line.matchAll(/\[(\d+):([0-5]?\d)(?:[.:](\d{1,3}))?\]/g)];
+      if (!stamps.length) continue;
+      const content = line.slice(stamps.at(-1).index + stamps.at(-1)[0].length).trim();
+      for (const stamp of stamps) {
+        const time = Number(stamp[1]) * 60 + Number(stamp[2]) + Number(`0.${stamp[3] || 0}`) - offset;
+        if (Number.isFinite(time)) entries.push({ time: Math.max(0, time), text: content });
+      }
+    }
+    entries.sort((a, b) => a.time - b.time);
+    // Multiple voices can share a timestamp. Keep those lines together.
+    const groups = [];
+    for (const entry of entries) {
+      const previous = groups.at(-1);
+      if (previous?.time === entry.time) previous.text += `\n${entry.text}`;
+      else groups.push({ ...entry });
+    }
+    return groups.some((entry) => entry.text) ? groups : [];
+  }
+
+  function renderFollowMode() {
+    $('follow').disabled = !hasLyrics;
+    $('mode').textContent = !hasLyrics ? 'Waiting for lyrics' : !$('follow').checked ? 'Scrolling paused' : timedLines.length ? 'Timed lyrics' : 'Approximate · song %';
+    $('follow').title = 'Follow playback. Scrolling the lyrics yourself pauses following; check this again to resume.';
+  }
+
+  function update(time, total, force = false) {
+    playbackTime = Number.isFinite(time) ? Math.max(0, time) : 0;
+    playbackDuration = Number.isFinite(total) ? Math.max(0, total) : 0;
+    if (!hasLyrics || $('text').hidden) return;
+    let changed = false;
+    if (timedLines.length) {
+      let low = 0, high = timedLines.length;
+      while (low < high) {
+        const mid = (low + high) >>> 1;
+        if (timedLines[mid].time <= playbackTime) low = mid + 1;
+        else high = mid;
+      }
+      const index = low - 1;
+      changed = index !== activeLine;
+      if (changed) {
+        lineNodes[activeLine]?.classList.remove('current');
+        lineNodes[activeLine]?.removeAttribute('aria-current');
+        activeLine = index;
+        lineNodes[index]?.classList.add('current');
+        lineNodes[index]?.setAttribute('aria-current', 'true');
+      }
+    }
+    if (!$('follow').checked) return;
+    const panel = $('text');
+    if (timedLines.length) {
+      if (!changed && !force) return;
+      const line = lineNodes[activeLine];
+      panel.scrollTop = line ? Math.max(0, line.offsetTop - (panel.clientHeight - line.offsetHeight) / 2) : 0;
+    } else if (playbackDuration > 0) {
+      panel.scrollTop = Math.min(1, playbackTime / playbackDuration) * Math.max(0, panel.scrollHeight - panel.clientHeight);
+    }
+  }
 
   const status = (message) => { $('status').textContent = message; };
   const normalize = (text) => text.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
@@ -67,6 +131,9 @@ window.LyricsPanel = (() => {
   }
 
   function clearLyrics() {
+    timedLines = []; lineNodes = []; activeLine = -1; hasLyrics = false;
+    $('text').classList.remove('synced');
+    renderFollowMode();
     $('results').replaceChildren();
     $('results').hidden = true;
     $('match').hidden = true;
@@ -77,6 +144,9 @@ window.LyricsPanel = (() => {
   function reset() {
     cancel();
     fileKey = ''; album = ''; duration = 0;
+    playbackTime = 0; playbackDuration = 0;
+    $('follow').checked = true;
+    $('settings').open = true;
     $('artist').value = ''; $('title').value = '';
     for (const id of ['artist', 'title', 'search']) $(id).disabled = true;
     clearLyrics();
@@ -102,11 +172,26 @@ window.LyricsPanel = (() => {
     album = record.albumName;
     $('match').textContent = `${record.artistName} — ${record.trackName}${record.albumName ? ` · ${record.albumName}` : ''}`;
     $('match').hidden = false;
-    // Plain text only: API responses must never become HTML.
-    const text = record.plainLyrics || record.syncedLyrics.split('\n').filter((line) => /\[\d+:\d+/.test(line)).map((line) => line.replace(/\[[^\]]*\]/g, '').trim()).join('\n');
-    $('text').textContent = record.instrumental ? 'Instrumental — no sung lyrics.' : text || 'This record has no lyrics yet. Try another match.';
+    timedLines = record.instrumental ? [] : parseTimedLyrics(record.syncedLyrics);
+    lineNodes = []; activeLine = -1;
+    hasLyrics = !record.instrumental && !!(timedLines.length || record.plainLyrics.trim());
+    // Build text nodes only; lyrics returned by the service are never HTML.
+    $('text').replaceChildren();
+    $('text').classList.toggle('synced', !!timedLines.length);
+    if (timedLines.length) {
+      for (const line of timedLines) {
+        const node = document.createElement('p');
+        node.className = 'lyric-line';
+        node.textContent = line.text || '♪';
+        lineNodes.push(node);
+        $('text').append(node);
+      }
+    } else $('text').textContent = record.instrumental ? 'Instrumental — no sung lyrics.' : record.plainLyrics || 'This record has no lyrics yet. Try another match.';
     $('text').hidden = false;
+    $('settings').open = !hasLyrics;
     $('text').scrollTop = 0;
+    renderFollowMode();
+    update(playbackTime, playbackDuration || duration, true);
     status(cached ? 'Saved lyrics · available offline. Edit the details to find another version.' : 'Lyrics from LRCLIB. Edit the details if this is the wrong version.');
     if (!cached) {
       try {
@@ -226,5 +311,17 @@ window.LyricsPanel = (() => {
   });
   $('form').addEventListener('submit', (event) => { event.preventDefault(); $('artist').blur(); $('title').blur(); findLyrics(); });
   for (const id of ['artist', 'title']) $(id).addEventListener('input', () => { cancel(); album = ''; $('results').hidden = true; status('Choose Find lyrics to search with these details.'); });
-  return { reset, load };
+  $('follow').addEventListener('change', () => { renderFollowMode(); update(playbackTime, playbackDuration, true); });
+  const pauseFollowing = () => {
+    if (!hasLyrics) return;
+    $('follow').checked = false;
+    renderFollowMode();
+  };
+  for (const event of ['wheel', 'touchstart', 'pointerdown']) $('text').addEventListener(event, pauseFollowing, { passive: true });
+  $('text').addEventListener('keydown', (event) => {
+    if (['PageUp', 'PageDown', 'Home', 'End'].includes(event.key)) pauseFollowing();
+  });
+  new ResizeObserver(() => update(playbackTime, playbackDuration, true)).observe($('text'));
+  renderFollowMode();
+  return { reset, load, update };
 })();

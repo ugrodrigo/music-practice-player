@@ -141,6 +141,7 @@
     ui.seek.value = String(time);
     ui.seek.setAttribute("aria-valuetext", formatTime(time));
     ui.seek.style.setProperty("--progress", `${ready ? time / audio.duration * 100 : 0}%`);
+    window.LyricsPanel.update(time, ready ? audio.duration : 0);
   }
 
   function tick() {

@@ -16,6 +16,7 @@
       <span class="local-badge"><span aria-hidden="true">●</span> Local audio. Just you.</span>
     </header>
 
+    <div class="practice-content">
     <section class="player panel" aria-label="Audio player">
       <div class="track-row">
         <div class="track-info"><p class="eyebrow">ON THE MUSIC STAND</p><h2 id="filename">Choose a song to get started</h2><p id="file-hint">Drop an audio file anywhere, or open one below.</p></div>
@@ -37,7 +38,6 @@
       <p id="storage-warning" class="warning" role="status" hidden></p>
     </section>
 
-    <div class="practice-content">
     <section class="cue-section" aria-labelledby="cue-heading">
       <div class="section-heading"><div><p class="eyebrow">FIND YOUR WAY BACK</p><h2 id="cue-heading">Your cue points</h2></div><p><kbd>Shift</kbd> + <kbd>1–9</kbd> to set <span class="divider">/</span> <kbd>1–9</kbd> to jump</p></div>
       <div id="cues" class="cue-grid"></div>
@@ -46,6 +46,8 @@
 
     <aside class="lyrics panel" aria-labelledby="lyrics-heading">
       <div class="lyrics-heading"><h2 id="lyrics-heading">Lyrics</h2><a href="https://lrclib.net" target="_blank" rel="noopener noreferrer">LRCLIB ↗</a></div>
+      <div class="lyrics-follow-row"><label><input id="lyrics-follow" type="checkbox" checked> Follow song</label><span id="lyrics-mode">Waiting for lyrics</span></div>
+      <details id="lyrics-settings" open><summary>Find or change lyrics</summary>
       <label class="lyrics-auto"><input id="lyrics-auto" type="checkbox" checked> Auto-find lyrics</label>
       <p class="lyrics-note">Looks up song details online. Your audio stays local.</p>
       <form id="lyrics-form">
@@ -53,6 +55,7 @@
         <label for="lyrics-title">Song title</label><input id="lyrics-title" type="text" placeholder="e.g. Scar Tissue" maxlength="200" autocomplete="off" required disabled>
         <button id="lyrics-search" class="button button-outline" type="submit" disabled>Find lyrics</button>
       </form>
+      </details>
       <p id="lyrics-status" class="lyrics-note" role="status" aria-live="polite">Load a song to find its lyrics.</p>
       <div id="lyrics-results" class="lyrics-results" aria-label="Matching songs" hidden></div>
       <p id="lyrics-match" class="lyrics-match" hidden></p>
