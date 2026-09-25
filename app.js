@@ -208,6 +208,7 @@
     if (objectURL) URL.revokeObjectURL(objectURL);
     objectURL = URL.createObjectURL(file);
     filename = file.name;
+    window.LyricsPanel.reset();
     cues = Array(9).fill(null);
     cards.forEach((card) => { clearTimeout(card.timer); card.root.classList.remove("flash"); });
     warnStorage("");
@@ -231,6 +232,7 @@
       ui.seek.max = String(current.duration);
       restoreCues();
       setReady(true);
+      window.LyricsPanel.load(file, current.duration);
       const count = cues.filter(Boolean).length;
       announce(count ? `${count} saved cue${count === 1 ? "" : "s"} restored. Press Space to play.` : "Press Space to play. Set your first cue with Shift + 1.");
     });

@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="dark">
   <title>Music Practice Player</title>
   <link rel="stylesheet" href="style.css">
+  <script src="lyrics.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -36,18 +37,35 @@
       <p id="storage-warning" class="warning" role="status" hidden></p>
     </section>
 
+    <div class="practice-content">
     <section class="cue-section" aria-labelledby="cue-heading">
       <div class="section-heading"><div><p class="eyebrow">FIND YOUR WAY BACK</p><h2 id="cue-heading">Your cue points</h2></div><p><kbd>Shift</kbd> + <kbd>1–9</kbd> to set <span class="divider">/</span> <kbd>1–9</kbd> to jump</p></div>
       <div id="cues" class="cue-grid"></div>
       <p class="cue-footnote">Set a cue while listening. Jump back as often as you need.</p>
     </section>
 
+    <aside class="lyrics panel" aria-labelledby="lyrics-heading">
+      <div class="lyrics-heading"><h2 id="lyrics-heading">Lyrics</h2><a href="https://lrclib.net" target="_blank" rel="noopener noreferrer">LRCLIB ↗</a></div>
+      <label class="lyrics-auto"><input id="lyrics-auto" type="checkbox" checked> Auto-find lyrics</label>
+      <p class="lyrics-note">Looks up song details online. Your audio stays local.</p>
+      <form id="lyrics-form">
+        <label for="lyrics-artist">Artist</label><input id="lyrics-artist" type="text" placeholder="e.g. Red Hot Chili Peppers" maxlength="200" autocomplete="off" disabled>
+        <label for="lyrics-title">Song title</label><input id="lyrics-title" type="text" placeholder="e.g. Scar Tissue" maxlength="200" autocomplete="off" required disabled>
+        <button id="lyrics-search" class="button button-outline" type="submit" disabled>Find lyrics</button>
+      </form>
+      <p id="lyrics-status" class="lyrics-note" role="status" aria-live="polite">Load a song to find its lyrics.</p>
+      <div id="lyrics-results" class="lyrics-results" aria-label="Matching songs" hidden></div>
+      <p id="lyrics-match" class="lyrics-match" hidden></p>
+      <div id="lyrics-text" class="lyrics-text" tabindex="0" aria-label="Song lyrics" hidden></div>
+    </aside>
+    </div>
+
     <footer class="shortcuts panel" aria-label="Keyboard shortcuts">
       <p class="eyebrow">KEEP YOUR HANDS ON THE MUSIC</p>
       <div class="shortcut-grid">
         <span><kbd>Space</kbd> Play / pause</span><span><kbd>←</kbd> <kbd>→</kbd> Seek 2s</span><span><kbd>Shift</kbd> + <kbd>←</kbd> <kbd>→</kbd> Seek 5s</span><span><kbd>[</kbd> <kbd>]</kbd> Nudge 0.5s when paused</span><span><kbd>−</kbd> <kbd>=</kbd> Change speed</span>
       </div>
-      <p class="shortcut-note">Shortcuts pause while you edit a cue name. Press Enter or Escape to finish editing.</p>
+      <p class="shortcut-note">Shortcuts pause while typing in cue names or lyrics search fields. Press Enter or Escape to finish editing a cue name.</p>
     </footer>
   </main>
   <div id="drop-overlay" class="drop-overlay" hidden><div><span aria-hidden="true">↓</span><h2>Drop your next song</h2><p>Audio stays on your device.</p></div></div>

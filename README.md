@@ -1,10 +1,10 @@
 # Music Practice Player
 
-A local, keyboard-first audio player for learning songs. Set nine cue points and jump between sections while practicing.
+A local, keyboard-first audio player for learning songs. Set nine cue points and jump between sections while practicing. An optional LRCLIB panel finds lyrics without uploading your audio.
 
 ## Open the app
 
-Open `index.html` directly in Chrome or Edge. No installation, server, build step, or internet connection is needed.
+Open `index.html` directly in Chrome or Edge. No installation, server, or build step is needed. Audio playback works offline; fetching new lyrics requires internet access.
 
 Drag an audio file anywhere onto the page, or click **Open audio file**. MP3, WAV, M4A, and other browser-supported audio formats are accepted; actual playback depends on the codec supported by your browser. Your audio stays on your device and is never uploaded.
 
@@ -24,7 +24,23 @@ Each cue has a large jump button, an editable name, a Set/Update button, and a R
 | `[` / `]` | Move backward / forward 0.5 seconds while paused |
 | `-` / `=` | Decrease / increase speed through the available settings |
 
-Shortcuts work across the app except while typing a cue name. Names save as you type; press Enter or Escape to leave the name field. Holding an arrow repeats seeking. Holding Space does not repeatedly toggle playback. Seeks stop at the start and end of the song.
+Shortcuts work across the app except while typing in cue names or lyrics search fields. Names save as you type; press Enter or Escape to leave the name field. Holding an arrow repeats seeking. Holding Space does not repeatedly toggle playback. Seeks stop at the start and end of the song.
+
+## Lyrics lookup
+
+Load a song with **Auto-find lyrics** enabled. The app reads basic MP3 ID3v1 and ID3v2.2/2.3/2.4 title, artist, and album tags locally. Unsupported, compressed, or malformed tags fall back to the filename. Other formats, including WAV/M4A, currently use filename inference rather than embedded tags.
+
+Use a filename such as `Red Hot Chili Peppers - Scar Tissue.mp3`. If the artist cannot be inferred, enter it in the Lyrics panel and click **Find lyrics**. Artist and title are always editable. Files named `track01.mp3` without readable tags cannot be identified from their audio.
+
+The app first requests a match using title, artist, available album information, and duration. An exact normalized artist/title match within two seconds of the track's duration can display automatically. Otherwise, search results let you choose a recording; closest durations appear first. Matching can still be wrong for alternate versions, so check the displayed artist/title/album and search again if needed.
+
+Lyrics appear as plain text. If only timestamped lyrics are available, the timestamps are removed for reading; synchronized highlighting and scrolling are not implemented. Instrumental records are labeled clearly.
+
+Only the search details are sent to [LRCLIB](https://lrclib.net/docs), using its public API and an identifying client header. The audio file is never uploaded. There is no API key, dependency, proxy, or backend. Requests are sequential, spaced apart, have a timeout, and honor rate-limit retry instructions. A failed lookup does not interrupt audio playback or cues.
+
+The last ten selected lyrics records are cached in `localStorage`, associated with filename, size, and modification time. Reopening the same file restores cached lyrics without a network request, including while offline. Editing/replacing a file can cause a fresh lookup. If browser storage is unavailable or full, lyrics still display for the session. Clearing browser storage removes cached lyrics and preferences.
+
+Uncheck **Auto-find lyrics** to stop automatic online searches; this preference is saved. Cached lyrics still load, and **Find lyrics** remains available for explicit searches. There is no background polling or song recognition service.
 
 ## Cue persistence
 
@@ -49,8 +65,22 @@ Run this workflow in Chrome and Edge:
 
 The app deliberately excludes loops, A/B repeat, waveforms, streaming services, and cloud features.
 
+### Lyrics acceptance test
+
+1. Load `Red Hot Chili Peppers - Scar Tissue.mp3` (or another clearly named song) with automatic lookup enabled.
+2. Confirm the suggested artist/title and the displayed lyrics or recording choices.
+3. Correct the artist/title and select **Find lyrics**. Choose a different recording if necessary.
+4. Type spaces and digits into the search fields and verify they do not play/pause or activate cues.
+5. Reload, reopen the same file, and confirm saved lyrics return. Cached lyrics should also work offline.
+6. Disable automatic lookup, load another song, and confirm no search runs until **Find lyrics** is clicked.
+7. Change songs during a search; a late response must not replace the new song's panel. Try a nonexistent title or go offline; playback and cues should keep working.
+
+The playback code remains in `app.js`; independent metadata parsing, LRCLIB requests, result selection, and caching live in `lyrics.js`.
+
 ## Validation performed
 
 Automated checks in headless Microsoft Edge opened the actual `index.html` through `file://` and used a generated 65-second WAV file. They verified both loading paths, playback state, repeated cue jumps, exact paused seeks, fine positioning, name editing, speed limits, track boundaries, reset persistence, restoration after reload, file switching, and recovery from invalid audio or unavailable/corrupt storage.
 
 Chrome was not installed in the implementation environment. Manual listening and real MP3/M4A samples still need the acceptance check above; automated WAV checks do not establish audible seeking latency or every codec's compatibility.
+
+After adding lyrics, the local-player regression checks passed again. Browser tests also covered filename and generated ID3 tag inference, exact and ambiguous matches, result selection, keyboard safety, cached reuse, automatic lookup opt-out, safe text rendering, timestamped-text fallback, no results, network failures, stale responses, and rate limits. A live LRCLIB lookup for Red Hot Chili Peppers / Scar Tissue succeeded from the `file://` page in Edge. No application JavaScript exceptions were observed.
