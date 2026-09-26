@@ -217,3 +217,16 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
   .lyrics-match { margin-top: 6px; }
   #lyrics-settings { padding-bottom: 6px; }
 }
+
+#install-app { background: #a9d9ff; color: #102c43; border-color: #c5e6ff; min-height: 44px; }
+#install-app:hover { background: #c5e6ff; }
+@media (max-width: 760px) {
+  .app-header { gap: 10px; }
+  .app-header .brand { flex: 1; min-width: 0; gap: 8px; }
+  .app-header .brand-mark { flex-shrink: 0; width: 34px; height: 34px; }
+  .app-header h1 { font-size: 17px; line-height: 1.2; letter-spacing: -.4px; }
+  #install-app { flex-shrink: 0; height: 44px; padding: 8px 10px; font-size: 12px; }
+  .mobile-panels { display: grid; grid-template-columns: 1fr 1fr 1.35fr; gap: 6px; margin-bottom: 8px; }
+  .mobile-panels button, #mobile-open-file { display: flex; align-items: center; justify-content: center; height: 44px; min-height: 44px; min-width: 0; padding: 6px; font-size: 12px; font-weight: 600; line-height: 1.2; white-space: normal; }
+  .install-row { margin-top: 0; margin-bottom: 8px; }
+}
