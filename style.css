@@ -199,3 +199,21 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
   .speed-control label { display: block; }
   #speed { width: 90px; }
 }
+
+#mobile-open-file { display: none; }
+#quick-cues button { user-select: none; -webkit-user-select: none; touch-action: pan-x; }
+#quick-cues button.holding { background: #536342; outline: 2px solid var(--accent); outline-offset: -2px; }
+@media (max-width: 760px) {
+  #mobile-open-file { display: inline-flex; min-height: 44px; }
+  .install-row { justify-content: flex-start; gap: 6px; }
+  #offline-status { flex-basis: 100%; }
+  body[data-mobile-panel="lyrics"] .player { display: contents; }
+  body[data-mobile-panel="lyrics"] .player > :not(#playback-dock):not(#storage-warning) { display: none !important; }
+  body[data-mobile-panel="lyrics"] .practice-content { grid-template-areas: "lyrics" "cues"; }
+  body[data-mobile-panel="lyrics"] .lyrics { height: max(360px, calc(100dvh - var(--lyrics-top, 180px) - var(--dock-height, 260px) - 10px)); min-height: 360px; }
+  .lyrics:has(#lyrics-match:not([hidden])) #lyrics-status { display: none; }
+  .lyrics-text { font-size: 16px; line-height: 1.65; }
+  .lyric-line { padding: 6px 8px; min-height: 44px; }
+  .lyrics-match { margin-top: 6px; }
+  #lyrics-settings { padding-bottom: 6px; }
+}

@@ -60,9 +60,12 @@
     event.currentTarget.textContent = expanded ? 'Hide waveform' : 'Show waveform';
   });
 
-  new ResizeObserver(() => {
+  const layoutObserver = new ResizeObserver(() => {
     document.documentElement.style.setProperty('--dock-height', `${document.getElementById('playback-dock').getBoundingClientRect().height}px`);
-  }).observe(document.getElementById('playback-dock'));
+    const content = document.querySelector('.practice-content');
+    document.documentElement.style.setProperty('--lyrics-top', `${content.getBoundingClientRect().top + window.scrollY}px`);
+  });
+  for (const selector of ['#playback-dock', '.app-header', '.install-row', '.mobile-panels']) layoutObserver.observe(document.querySelector(selector));
 
   if (location.protocol === 'file:') {
     status.textContent = 'Local file mode · open the HTTPS website on Android to install';

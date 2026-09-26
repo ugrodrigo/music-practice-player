@@ -21,7 +21,40 @@
   const quickButtons = Array.from({ length: 9 }, (_, index) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.addEventListener('click', () => jumpCue(index));
+    let holdTimer = 0, held = false, origin = null;
+    const cancelHold = () => {
+      clearTimeout(holdTimer);
+      button.classList.remove('holding');
+      origin = null;
+    };
+    button.addEventListener('pointerdown', (event) => {
+      cancelHold();
+      held = false;
+      if (!ready || !cues[index] || !event.isPrimary || event.button !== 0) return;
+      const track = audio;
+      const time = selectedLyricTime ?? audio.currentTime;
+      origin = { x: event.clientX, y: event.clientY };
+      button.classList.add('holding');
+      holdTimer = setTimeout(() => {
+        if (!ready || audio !== track || !cues[index]) return cancelHold();
+        held = true;
+        setCue(index, time);
+        clearLyricSelection();
+        $('cue-selection').textContent = `Cue ${index + 1} overwritten at ${formatTime(time)}.`;
+        cancelHold();
+      }, 650);
+    });
+    button.addEventListener('pointermove', (event) => {
+      if (origin && Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 10) cancelHold();
+    });
+    for (const event of ['pointerup', 'pointercancel', 'pointerleave', 'lostpointercapture']) button.addEventListener(event, cancelHold);
+    window.addEventListener('blur', cancelHold);
+    button.addEventListener('contextmenu', event => event.preventDefault());
+    button.addEventListener('click', (event) => {
+      if (held) { event.preventDefault(); held = false; return; }
+      jumpCue(index);
+    });
+    button.title = 'Tap to jump. Hold to overwrite with the selected lyric or current position.';
     $('quick-cues').append(button);
     return button;
   });
@@ -32,7 +65,7 @@
     $('save-next-cue').textContent = next < 0 ? 'All 9 cues saved' : `Save cue ${next + 1}`;
     $('use-current-time').hidden = selectedLyricTime === null;
     $('cue-selection').textContent = selectedLyricTime === null
-      ? 'Save current position - or tap a timed lyric'
+      ? 'Tap a lyric to select. Hold a saved cue to overwrite.'
       : `Selected lyric - ${formatTime(selectedLyricTime)}`;
     quickButtons.forEach((button, index) => {
       const cue = cues[index];
@@ -296,6 +329,7 @@
     current.load();
   }
 
+  $("mobile-open-file").addEventListener("click", () => ui["file-input"].click());
   ui["open-file"].addEventListener("click", () => ui["file-input"].click());
   ui["file-input"].addEventListener("change", () => {
     loadFile(ui["file-input"].files[0]);
