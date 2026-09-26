@@ -22,12 +22,17 @@ window.Waveform = (() => {
     const count = peaks.amplitude.length;
     const bars = Math.max(1, Math.floor(width / (2 * (window.devicePixelRatio || 1))));
     const step = width / bars;
-    for (let bar = 0; bar < bars; bar++) {
-      const barStart = start + span * bar / bars;
-      const barEnd = start + span * (bar + 1) / bars;
+    // Anchor each bar's audio interval to the track, not the moving viewport.
+    // Scrolling changes only its x position, never its height or color.
+    const secondsPerBar = span / bars;
+    const firstBar = Math.floor(start / secondsPerBar);
+    for (let bar = firstBar; bar <= Math.floor((start + span) / secondsPerBar); bar++) {
+      const barStart = bar * secondsPerBar;
+      const barEnd = (bar + 1) * secondsPerBar;
+      const x = (barStart - start) / span * width;
       if (barEnd <= 0 || barStart >= trackDuration) continue;
       const from = Math.max(0, Math.min(count - 1, Math.floor(barStart / trackDuration * count)));
-      const to = Math.min(count, Math.max(from + 1, Math.floor((start + span * (bar + 1) / bars) / trackDuration * count)));
+      const to = Math.min(count, Math.max(from + 1, Math.floor(barEnd / trackDuration * count)));
       let energy = 0, transient = 0, bass = 0, mid = 0, high = 0;
       for (let i = from; i < to; i++) {
         energy += peaks.amplitude[i] ** 2;
@@ -41,9 +46,9 @@ window.Waveform = (() => {
       const outer = Math.max(size, Math.min(1, transient / (scale * 2.8)) * (height - 8));
       target.fillStyle = color;
       target.globalAlpha = .25;
-      target.fillRect(bar * step, (height - outer) / 2, Math.max(1, step - .5), outer);
+      target.fillRect(x, (height - outer) / 2, Math.max(1, step - .5), outer);
       target.globalAlpha = .95;
-      target.fillRect(bar * step, (height - size) / 2, Math.max(1, step - .5), size);
+      target.fillRect(x, (height - size) / 2, Math.max(1, step - .5), size);
     }
     target.globalAlpha = 1;
   }

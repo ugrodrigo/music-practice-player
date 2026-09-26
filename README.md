@@ -139,3 +139,5 @@ Cue-bubble checks passed tap/hold opening, exact timestamp saving, compact dock 
 Before the first sung line, lyrics start at the top without a highlighted line; early lines highlight in place without adding space above them. Centered following starts only once enough preceding lines naturally fill the upper half. The mobile lyrics box is 88 pixels shorter, raising its center marker by about one lyric row. The mobile Edit cues track row has Show waveform instead of a duplicate Open audio file button. Browser checks covered repeated hold/tap cycles, eight visible slots, page creation through cue 16, later-page persistence, and offline reopening.
 
 The lyric hold popup has been removed. Lyrics only seek/select; numbered cue buttons handle saving, jumping, and hold-to-overwrite.
+
+Scrolling waveform bars sample fixed intervals anchored to the track, so their heights and colors remain stable as they move horizontally.

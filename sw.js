@@ -1,7 +1,7 @@
 "use strict";
 
 // Bump this version whenever any cached application file changes.
-const VERSION = 'v11';
+const VERSION = 'v12';
 const PREFIX = `music-practice-player:${self.registration.scope}:`;
 const CACHE = PREFIX + VERSION;
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'lyrics.js', 'waveform.js', 'pwa.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
