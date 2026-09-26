@@ -29,11 +29,11 @@
       <div class="track-row">
         <div class="track-info"><p class="eyebrow">ON THE MUSIC STAND</p><h2 id="filename">Choose a song to get started</h2><p id="file-hint">Drop an audio file anywhere, or open one below.</p></div>
         <button id="open-file" class="button button-outline" type="button"><span aria-hidden="true">＋</span> Open audio file</button>
+      <button id="toggle-waveform" class="mobile-waveform-toggle" type="button" aria-expanded="false" aria-controls="waveform-wrap">Show waveform</button>
         <input id="file-input" type="file" accept="audio/*,.mp3,.wav,.m4a" hidden>
       </div>
 
       <label class="sr-only" for="seek">Playback position</label>
-      <button id="toggle-waveform" class="mobile-waveform-toggle" type="button" aria-expanded="false" aria-controls="waveform-wrap">Show waveform</button>
       <div class="waveform-wrap" id="waveform-wrap" hidden>
         <div class="waveform-toolbar"><span><b class="wave-bass">Bass</b> · <b class="wave-mid">Mids</b> · <b class="wave-high">Highs</b></span><label>View <select id="waveform-zoom" disabled><option value="10">10 seconds</option><option value="30" selected>30 seconds</option><option value="0">Full track</option></select></label></div>
         <canvas id="waveform" role="img" aria-label="Frequency-colored waveform with a full-track overview below. Use the playback position slider for keyboard seeking." title="Click or drag the main waveform to fine-seek; use the overview below to jump across the track"></canvas>
@@ -42,7 +42,7 @@
       <div id="playback-dock">
       <div class="mobile-cue-tools">
         <div id="quick-cues" aria-label="Saved cue points"></div>
-        <button id="cue-at-position" type="button">+ Cue</button>
+        <div id="cue-pages" hidden><button id="cue-page-prev" type="button" aria-label="Previous cue page">Previous</button><span id="cue-page-label">1-8</span><button id="cue-page-next" type="button" aria-label="Next cue page">Next</button></div>
         <p id="cue-feedback" class="sr-only" role="status"></p>
       </div>
       <div class="clock-row"><span id="current-time" class="clock" aria-label="Current playback time">00:00.0</span><span class="duration">/ <span id="duration">00:00.0</span></span></div>

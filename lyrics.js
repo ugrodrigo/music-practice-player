@@ -31,6 +31,7 @@ window.LyricsPanel = (() => {
       if (previous?.time === entry.time) previous.text += `\n${entry.text}`;
       else groups.push({ ...entry });
     }
+    while (groups.length > 1 && !groups[0].text.trim()) groups.shift();
     return groups.some((entry) => entry.text) ? groups : [];
   }
 
@@ -45,7 +46,7 @@ window.LyricsPanel = (() => {
   $('find').addEventListener('click', () => showTab(true));
 
   function renderFollowMode() {
-    $('mode').textContent = !hasLyrics ? 'Waiting for lyrics' : timedLines.length ? 'Scroll to seek. Tap or hold a line to save a cue.' : 'Approximate scrolling - song %';
+    $('mode').textContent = !hasLyrics ? 'Waiting for lyrics' : timedLines.length ? 'Scroll to seek. Tap to seek. Hold a line to save a cue.' : 'Approximate scrolling - song %';
   }
 
   function update(time, total, force = false) {
@@ -72,6 +73,7 @@ window.LyricsPanel = (() => {
     }
     if (scrubbing || document.getElementById('cue-bubble').matches(':popover-open')) return;
     const panel = $('text');
+    panel.classList.toggle('before-vocals', timedLines.length > 0 && activeLine < 0);
     if (timedLines.length) {
       if (!changed && !force) return;
       const line = lineNodes[activeLine];
@@ -212,7 +214,7 @@ window.LyricsPanel = (() => {
         node.title = `Jump to ${stamp}`;
         node.setAttribute('aria-label', `Jump to ${stamp}: ${line.text || 'Instrumental break'}`);
         node.setAttribute('aria-pressed', 'false');
-        const selectLine = () => {
+        const selectLine = (bubble = false) => {
           scrubbing = false; clearTimeout(scrubTimer);
           lineNodes.forEach(line => { line.classList.remove('selected'); line.setAttribute('aria-pressed', 'false'); });
           node.classList.add('selected');
@@ -220,7 +222,7 @@ window.LyricsPanel = (() => {
 
           renderFollowMode();
           $('text').dispatchEvent(new CustomEvent('lyricsseek', { detail: line.time }));
-          $('text').dispatchEvent(new CustomEvent('lyriccue', { detail: node }));
+          if (bubble) $('text').dispatchEvent(new CustomEvent('lyriccue', { detail: node }));
         };
         let holdTimer = 0, held = false, start = null;
         const cancelHold = () => { clearTimeout(holdTimer); start = null; };
@@ -228,11 +230,12 @@ window.LyricsPanel = (() => {
           cancelHold(); held = false;
           if (!event.isPrimary || event.button !== 0) return;
           start = { x: event.clientX, y: event.clientY };
-          holdTimer = setTimeout(() => { held = true; selectLine(); }, 550);
+          holdTimer = setTimeout(() => { if (node.isConnected) { held = true; selectLine(true); } }, 550);
         });
         node.addEventListener('pointermove', event => {
           if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10) cancelHold();
         });
+        window.addEventListener('blur', cancelHold);
         for (const event of ['pointerup', 'pointercancel', 'pointerleave']) node.addEventListener(event, cancelHold);
         node.addEventListener('contextmenu', event => event.preventDefault());
         node.addEventListener('click', () => { if (held) held = false; else selectLine(); });

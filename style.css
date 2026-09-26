@@ -254,3 +254,15 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
   #quick-cues:has(button:not([hidden])) { margin-bottom: 0; }
   #lyrics-mode { font-size: 10px; margin-top: 2px; }
 }
+
+.lyrics-text.synced.before-vocals { padding-top: 0; background: none; }
+@media (max-width: 760px) {
+  .mobile-cue-tools { display: block; }
+  #quick-cues { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; overflow: visible; }
+  #quick-cues button { min-width: 0; width: 100%; max-width: none; min-height: 44px; padding: 4px 0; border-style: dashed; background: #20271e; font-size: 12px; }
+  #quick-cues button.assigned { border-style: solid; background: #35472b; color: var(--accent); }
+  #cue-pages { display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 11px; }
+  #cue-pages button { min-height: 36px; padding: 4px 12px; border: 0; background: transparent; }
+  .track-row #open-file { display: none; }
+  .track-row #toggle-waveform { flex-shrink: 0; max-width: 100px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; }
+}

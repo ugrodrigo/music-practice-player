@@ -13,12 +13,13 @@
   let objectURL = null;
   let filename = "";
   let ready = false;
-  let cues = Array(9).fill(null);
+  let cues = Array(8).fill(null);
   let frame = 0;
   let dragDepth = 0;
   const cards = [];
   let selectedLyricTime = null;
-  const quickButtons = Array.from({ length: 9 }, (_, index) => {
+  let cuePage = 0;
+  const quickButtons = Array.from({ length: 8 }, (_, slot) => {
     const button = document.createElement('button');
     button.type = 'button';
     let holdTimer = 0, held = false, origin = null;
@@ -30,13 +31,14 @@
     button.addEventListener('pointerdown', (event) => {
       cancelHold();
       held = false;
-      if (!ready || !cues[index] || !event.isPrimary || event.button !== 0) return;
+      const index = cuePage * 8 + slot;
+      if (!ready || !event.isPrimary || event.button !== 0) return;
       const track = audio;
       const time = selectedLyricTime ?? audio.currentTime;
       origin = { x: event.clientX, y: event.clientY };
       button.classList.add('holding');
       holdTimer = setTimeout(() => {
-        if (!ready || audio !== track || !cues[index]) return cancelHold();
+        if (!ready || audio !== track || cuePage !== Math.floor(index / 8)) return cancelHold();
         held = true;
         setCue(index, time);
         clearLyricSelection();
@@ -52,7 +54,9 @@
     button.addEventListener('contextmenu', event => event.preventDefault());
     button.addEventListener('click', (event) => {
       if (held) { event.preventDefault(); held = false; return; }
-      jumpCue(index);
+      const index = cuePage * 8 + slot;
+      if (cues[index]) jumpCue(index);
+      else { setCue(index, selectedLyricTime ?? audio.currentTime); clearLyricSelection(); }
     });
     button.title = 'Tap to jump. Hold to overwrite with the selected lyric or current position.';
     $('quick-cues').append(button);
@@ -62,20 +66,29 @@
   function renderQuickCues() {
     const next = cues.findIndex(cue => !cue);
     $('save-next-cue').disabled = !ready || next < 0;
-    $('cue-at-position').disabled = !ready;
-    $('save-next-cue').textContent = next < 0 ? 'All 9 cues saved' : `Save cue ${next + 1}`;
+    $('save-next-cue').textContent = next < 0 ? 'Save next cue' : `Save cue ${next + 1}`;
     $('use-current-time').hidden = selectedLyricTime === null;
     $('cue-selection').textContent = selectedLyricTime === null
       ? 'Tap a lyric to select. Hold a saved cue to overwrite.'
       : `Selected lyric - ${formatTime(selectedLyricTime)}`;
-    quickButtons.forEach((button, index) => {
+    $('cue-page-prev').disabled = cuePage === 0;
+    $('cue-page-next').disabled = (cuePage + 1) * 8 >= cues.length;
+    $('cue-page-label').textContent = `${cuePage * 8 + 1}-${cuePage * 8 + 8}`;
+    $('cue-pages').hidden = cues.length <= 8;
+    quickButtons.forEach((button, slot) => {
+      const index = cuePage * 8 + slot;
       const cue = cues[index];
-      button.hidden = !cue;
+      button.hidden = false;
+      button.classList.toggle("assigned", !!cue);
       button.disabled = !ready;
-      button.textContent = `${index + 1} - ${cue?.name || (cue ? formatTime(cue.time) : '')}`;
-      button.setAttribute('aria-label', `Jump to cue ${index + 1}${cue ? ', ' + formatTime(cue.time) : ''}`);
+      button.textContent = String(index + 1);
+      button.title = cue ? `${cue.name || 'Cue ' + (index + 1)} - ${formatTime(cue.time)}. Hold to overwrite.` : `Set cue ${index + 1}`;
+      button.setAttribute('aria-label', `${cue ? 'Jump to' : 'Set'} cue ${index + 1}${cue ? ', ' + formatTime(cue.time) : ''}`);
     });
   }
+
+  $('cue-page-prev').addEventListener('click', () => { if (cuePage > 0) { cuePage--; renderQuickCues(); } });
+  $('cue-page-next').addEventListener('click', () => { if ((cuePage + 1) * 8 < cues.length) { cuePage++; renderQuickCues(); } });
 
   function clearLyricSelection() {
     selectedLyricTime = null;
@@ -96,11 +109,6 @@
     bubble.style.left = `${Math.max(8, Math.min(innerWidth - bubble.offsetWidth - 8, rect.left))}px`;
     bubble.style.top = `${Math.max(8, Math.min(innerHeight - bubble.offsetHeight - 8, rect.top - bubble.offsetHeight - 8))}px`;
   }
-  $('cue-at-position').addEventListener('click', event => {
-    selectedLyricTime = ready ? audio.currentTime : null;
-    renderQuickCues();
-    openCueBubble(event.currentTarget);
-  });
   $('lyrics-text').addEventListener('lyriccue', event => openCueBubble(event.detail));
   $('lyrics-text').addEventListener('lyricsscrub', event => {
     clearLyricSelection();
@@ -142,7 +150,7 @@
       if (!stored) return;
       const parsed = JSON.parse(stored);
       if (parsed.version !== 1 || !Array.isArray(parsed.cues)) throw new Error("Invalid cues");
-      cues = Array.from({ length: 9 }, (_, index) => {
+      cues = Array.from({ length: Math.max(8, Math.ceil(parsed.cues.length / 8) * 8) }, (_, index) => {
         const cue = parsed.cues[index];
         return cue && Number.isFinite(cue.time) && cue.time >= 0 && cue.time <= audio.duration
           ? { time: cue.time, name: typeof cue.name === "string" ? cue.name.slice(0, 100) : "" }
@@ -165,6 +173,7 @@
   function renderCue(index) {
     const cue = cues[index];
     const card = cards[index];
+    if (!card) return;
     card.root.classList.toggle("assigned", !!cue);
     card.time.textContent = cue ? formatTime(cue.time) : "Not set yet";
     card.time.classList.toggle("cue-empty", !cue);
@@ -174,12 +183,14 @@
     card.name.value = cue ? cue.name : "";
     card.set.disabled = !ready;
     card.set.textContent = `${cue ? "Update" : "Set"} · Shift + ${index + 1}`;
+    if (index >= 9) card.set.textContent = cue ? "Update" : "Set";
     card.reset.disabled = !ready || !cue;
     renderQuickCues();
   }
 
   function flashCue(index) {
     const card = cards[index];
+    if (!card) return;
     clearTimeout(card.timer);
     card.root.classList.add("flash");
     card.timer = setTimeout(() => card.root.classList.remove("flash"), 300);
@@ -187,7 +198,15 @@
 
   function setCue(index, time = audio.currentTime) {
     if (!ready) return;
+    const wasEmpty = !cues[index];
     cues[index] = { time: Math.max(0, Math.min(audio.duration, time)), name: cues[index]?.name || "" };
+    while (cues.length % 8) cues.push(null);
+    const savedPage = Math.floor(index / 8);
+    if (wasEmpty && cues.slice(savedPage * 8, savedPage * 8 + 8).every(Boolean)) {
+      if ((savedPage + 1) * 8 === cues.length) cues.push(...Array(8).fill(null));
+      cuePage = savedPage + 1;
+    }
+    ensureCards();
     renderCue(index);
     persistCues();
     flashCue(index);
@@ -202,7 +221,8 @@
     announce(`Cue ${index + 1}${cues[index].name ? ` · ${cues[index].name}` : ""}.`);
   }
 
-  for (let index = 0; index < 9; index++) {
+  function ensureCards() {
+  for (let index = cards.length; index < cues.length; index++) {
     const root = document.createElement("article");
     root.className = "cue-card";
     root.innerHTML = `<button class="cue-jump" type="button" disabled><span class="cue-number">${index + 1}</span><span class="cue-time cue-empty">Not set yet</span></button>
@@ -239,6 +259,9 @@
     renderCue(index);
   }
 
+  }
+  ensureCards();
+
   function renderPosition() {
     const time = ready ? audio.currentTime : 0;
     ui["current-time"].textContent = formatTime(time);
@@ -266,6 +289,8 @@
 
   function setReady(value) {
     ready = value;
+    if (cues.every(Boolean)) cues.push(...Array(8).fill(null));
+    ensureCards();
     for (const id of ["play", "back", "forward", "seek", "speed"]) ui[id].disabled = !value;
     cards.forEach((_, index) => renderCue(index));
     renderPlayback();
@@ -316,8 +341,10 @@
     filename = file.name;
     window.LyricsPanel.reset();
     window.Waveform.reset();
-    cues = Array(9).fill(null);
-    cards.forEach((card) => { clearTimeout(card.timer); card.root.classList.remove("flash"); });
+    cues = Array(8).fill(null);
+    cuePage = 0;
+    cards.forEach(card => { clearTimeout(card.timer); card.root.remove(); });
+    cards.length = 0;
     warnStorage("");
     ui.filename.textContent = filename;
     ui.filename.title = filename;
