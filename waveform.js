@@ -15,7 +15,7 @@ window.Waveform = (() => {
 
   function view() {
     const span = Math.min(trackDuration, Number(zoom.value) || trackDuration);
-    return { start: Math.max(0, Math.min(trackDuration - span, progress * trackDuration - span / 2)), span };
+    return { start: Math.max(0, Math.min(trackDuration - span, Math.floor(progress * trackDuration / span) * span)), span };
   }
 
   function paint(target, start, span, width, height) {

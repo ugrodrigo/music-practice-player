@@ -42,7 +42,7 @@
         held = true;
         setCue(index, time);
         clearLyricSelection();
-        $('cue-selection').textContent = `Cue ${index + 1} overwritten at ${formatTime(time)}.`;
+        $('cue-feedback').textContent = `Cue ${index + 1} overwritten at ${formatTime(time)}.`;
         cancelHold();
       }, 650);
     });
@@ -64,13 +64,6 @@
   });
 
   function renderQuickCues() {
-    const next = cues.findIndex(cue => !cue);
-    $('save-next-cue').disabled = !ready || next < 0;
-    $('save-next-cue').textContent = next < 0 ? 'Save next cue' : `Save cue ${next + 1}`;
-    $('use-current-time').hidden = selectedLyricTime === null;
-    $('cue-selection').textContent = selectedLyricTime === null
-      ? 'Tap a lyric to select. Hold a saved cue to overwrite.'
-      : `Selected lyric - ${formatTime(selectedLyricTime)}`;
     $('cue-page-prev').disabled = cuePage === 0;
     $('cue-page-next').disabled = (cuePage + 1) * 8 >= cues.length;
     $('cue-page-label').textContent = `${cuePage * 8 + 1}-${cuePage * 8 + 8}`;
@@ -96,36 +89,12 @@
       node.classList.remove('selected'); node.setAttribute('aria-pressed', 'false');
     });
     renderQuickCues();
-    $('cue-bubble').hidePopover();
   }
 
-  $('use-current-time').addEventListener('click', clearLyricSelection);
   $('lyrics-text').addEventListener('lyricschanged', clearLyricSelection);
-  function openCueBubble(anchor) {
-    if (!ready) return;
-    const bubble = $('cue-bubble');
-    bubble.showPopover();
-    const rect = anchor.getBoundingClientRect();
-    bubble.style.left = `${Math.max(8, Math.min(innerWidth - bubble.offsetWidth - 8, rect.left))}px`;
-    bubble.style.top = `${Math.max(8, Math.min(innerHeight - bubble.offsetHeight - 8, rect.top - bubble.offsetHeight - 8))}px`;
-  }
-  $('lyrics-text').addEventListener('lyriccue', event => openCueBubble(event.detail));
   $('lyrics-text').addEventListener('lyricsscrub', event => {
     clearLyricSelection();
     seekTo(event.detail);
-  });
-  $('cue-bubble').addEventListener('toggle', event => {
-    if (event.newState === 'closed') {
-      selectedLyricTime = null;
-      document.querySelectorAll('.lyric-line.selected').forEach(node => { node.classList.remove('selected'); node.setAttribute('aria-pressed', 'false'); });
-    }
-  });
-  $('save-next-cue').addEventListener('click', () => {
-    const next = cues.findIndex(cue => !cue);
-    if (!ready || next < 0) return;
-    setCue(next, selectedLyricTime ?? audio.currentTime);
-    clearLyricSelection();
-    $('cue-feedback').textContent = `Cue ${next + 1} saved at ${formatTime(cues[next].time)}. Select the next verse.`;
   });
 
   function formatTime(seconds) {
