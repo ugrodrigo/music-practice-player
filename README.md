@@ -8,6 +8,22 @@ Open `index.html` directly in Chrome or Edge. No installation, server, or build 
 
 Drag an audio file anywhere onto the page, or click **Open audio file**. MP3, WAV, M4A, and other browser-supported audio formats are accepted; actual playback depends on the codec supported by your browser. Your audio stays on your device and is never uploaded.
 
+## Install on Android and use offline
+
+The same app can be installed as a Progressive Web App (PWA). On phones, **Cue points** and **Lyrics** switch between panels, and **Show waveform** expands the waveform when needed.
+
+1. Publish this folder on an HTTPS static host. For this repository, GitHub Pages can serve the `main` branch's root folder: repository **Settings → Pages → Build and deployment → Deploy from a branch → main → / (root)**. See [GitHub's publishing instructions](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site). These local changes must be pushed before the hosted site can include them; implementation does not publish the site automatically.
+2. Open the published URL in Chrome on Android while online. With GitHub Pages enabled for this repository, the expected URL is `https://ugrodrigo.github.io/music-practice-player/`.
+3. Wait for **Ready offline**, then tap **Install app**. If that button is unavailable, use Chrome's menu to install/add the app to your home screen.
+4. Open an audio file stored on your phone. Fetch its lyrics once while online if you want them available offline.
+5. You can now reopen the app without internet and select the same local audio file again.
+
+Playback, speed controls, cues, waveform analysis, and previously cached lyrics work offline. New lyrics searches and Genius require internet. Audio is never uploaded or copied into the app cache; select it again after reopening. Cloud-only files need to be downloaded to the phone first. The lyrics cache retains the last ten selected records.
+
+Saved cues and lyrics belong to this browser and site address. They do not automatically transfer from the desktop app or a `file://` page. Clearing site data removes them and the offline app cache. Background/lock-screen playback and installation still need verification on a physical Android phone.
+
+Updates show **Update & reload** and wait for your tap, so they do not reload the app during practice. Developers must bump `VERSION` in `sw.js` whenever a cached app file changes. The service worker caches only the listed app files and removes only older caches belonging to this app's scope. Serve through HTTPS for phone installation; localhost also works for development on the same computer. Opening `index.html` directly continues to work as a local player, but does not install the service worker.
+
 ## Controls
 
 Use Play/Pause, the backward/forward buttons (2 seconds), or the seek bar. The playback clock shows tenths of a second. Available speeds are 0.5×, 0.75×, 0.9×, 1.0×, 1.1×, and 1.25×; each file starts at 1.0×. Pitch is preserved where the browser supports it.
@@ -47,7 +63,7 @@ Use a filename such as `Red Hot Chili Peppers - Scar Tissue.mp3`. If the artist 
 
 The app first requests a match using title, artist, available album information, and duration. An exact normalized artist/title match within two seconds of the track's duration can display automatically. Otherwise, search results let you choose a recording; closest durations appear first. Matching can still be wrong for alternate versions, so check the displayed artist/title/album and search again if needed.
 
-The desktop layout keeps a compact player and cue grid on the left and lyrics visible on the right. Search settings collapse when lyrics load; open **Find or change lyrics** to correct the match. On narrow screens, lyrics appear immediately after the player and before cues.
+The desktop layout keeps a compact player and cue grid on the left and lyrics visible on the right. Search settings collapse when lyrics load; open **Find or change lyrics** to correct the match. On narrow screens, use **Cue points** or **Lyrics** to choose the panel below the compact player.
 
 **Follow song** is enabled for each loaded song. When LRCLIB supplies timed lyrics, the current line is highlighted and centered using the audio position, including after cue jumps and seeks. LRC offsets and repeated timestamps are supported. With plain lyrics, scrolling follows the percentage of the song played; the panel labels this approximate because intros, solos, and uneven verse lengths can shift alignment. Playback speed changes work naturally because following uses the audio's position.
 
@@ -99,6 +115,8 @@ The app deliberately excludes loops, A/B repeat, streaming services, and cloud f
 The playback code remains in `app.js`; independent metadata parsing, LRCLIB requests, result selection, and caching live in `lyrics.js`.
 
 ## Validation performed
+
+PWA checks in headless Edge served the app from a subdirectory, verified its manifest and offline cache, disabled networking, and reopened the app successfully. Local audio playback, saved cues, cached timed lyrics, lyric seeking, and waveform analysis worked offline. Mobile panel switching and horizontal overflow were checked at 390×844. A staged update waited during playback and activated only after clicking **Update & reload**, removing the old app cache while preserving an unrelated cache. These desktop browser checks do not replace physical Android testing.
 
 Automated checks in headless Microsoft Edge opened the actual `index.html` through `file://` and used a generated 65-second WAV file. They verified both loading paths, playback state, repeated cue jumps, exact paused seeks, fine positioning, name editing, speed limits, track boundaries, reset persistence, restoration after reload, file switching, and recovery from invalid audio or unavailable/corrupt storage.
 
