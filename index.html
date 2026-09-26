@@ -7,6 +7,7 @@
   <title>Music Practice Player</title>
   <link rel="stylesheet" href="style.css">
   <script src="lyrics.js" defer></script>
+  <script src="waveform.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -25,6 +26,10 @@
       </div>
       <div class="clock-row"><span id="current-time" class="clock" aria-label="Current playback time">00:00.0</span><span class="duration">/ <span id="duration">00:00.0</span></span></div>
       <label class="sr-only" for="seek">Playback position</label>
+      <div class="waveform-wrap" id="waveform-wrap" hidden>
+        <canvas id="waveform" role="img" aria-label="Audio amplitude waveform. Use the playback position slider below for keyboard seeking." title="Click or drag to seek"></canvas>
+        <p id="waveform-status" role="status">Building waveform…</p>
+      </div>
       <input id="seek" class="seek" type="range" min="0" max="0" step="0.01" value="0" disabled aria-valuetext="00:00.0">
       <div class="transport-row">
         <div class="transport">

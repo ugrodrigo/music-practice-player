@@ -142,6 +142,7 @@
     ui.seek.setAttribute("aria-valuetext", formatTime(time));
     ui.seek.style.setProperty("--progress", `${ready ? time / audio.duration * 100 : 0}%`);
     window.LyricsPanel.update(time, ready ? audio.duration : 0);
+    window.Waveform.update(time, ready ? audio.duration : 0);
   }
 
   function tick() {
@@ -210,6 +211,7 @@
     objectURL = URL.createObjectURL(file);
     filename = file.name;
     window.LyricsPanel.reset();
+    window.Waveform.reset();
     cues = Array(9).fill(null);
     cards.forEach((card) => { clearTimeout(card.timer); card.root.classList.remove("flash"); });
     warnStorage("");
@@ -234,6 +236,7 @@
       restoreCues();
       setReady(true);
       window.LyricsPanel.load(file, current.duration);
+      window.Waveform.load(file, current.duration);
       const count = cues.filter(Boolean).length;
       announce(count ? `${count} saved cue${count === 1 ? "" : "s"} restored. Press Space to play.` : "Press Space to play. Set your first cue with Shift + 1.");
     });
@@ -257,6 +260,9 @@
   ui.back.addEventListener("click", () => seekTo(audio.currentTime - 2));
   ui.forward.addEventListener("click", () => seekTo(audio.currentTime + 2));
   ui.seek.addEventListener("input", () => seekTo(Number(ui.seek.value)));
+  document.getElementById('waveform').addEventListener('waveformseek', (event) => {
+    if (ready) seekTo(event.detail * audio.duration);
+  });
   ui.speed.addEventListener("change", () => changeSpeed(Number(ui.speed.value)));
 
   document.addEventListener("keydown", (event) => {

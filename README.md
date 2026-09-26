@@ -14,6 +14,14 @@ Use Play/Pause, the backward/forward buttons (2 seconds), or the seek bar. The p
 
 Each cue has a large jump button, an editable name, a Set/Update button, and a Reset button. Setting an existing cue replaces its timestamp and keeps its name. A jump preserves playback state: playing stays playing, paused stays paused. Empty cues do nothing when their number is pressed.
 
+## Colored waveform
+
+A compact waveform appears above the seek bar after the audio is decoded locally. Bar height and color represent relative amplitude (cooler colors for quieter sections, warmer colors for louder sections), not instruments or frequency bands. The played portion is brighter and a vertical cursor marks the current position.
+
+Click or drag on the waveform to seek. Playing stays playing; paused stays paused. Cue jumps and keyboard seeks update the cursor and lyrics as usual. The standard seek bar remains available for keyboard and assistive-technology access.
+
+Waveform analysis runs separately from playback, with no upload or dependencies. Files over 100 MiB or 20 minutes skip analysis to limit memory usage. Unsupported decoding falls back to the seek bar. Switching songs discards stale results and serializes decoding to avoid several large analyses at once. The decoded audio is reduced to a small peak array, then released; waveform data is not stored in browser storage.
+
 | Shortcut | Action |
 |---|---|
 | Space | Play / pause |
@@ -70,7 +78,7 @@ Run this workflow in Chrome and Edge:
 9. Check a cue at zero, resetting a cue, seeking at track boundaries, changing speeds, and typing shortcut characters into a cue name.
 10. Load another file and confirm its own cues appear. Try WAV and M4A samples and an unreadable audio file.
 
-The app deliberately excludes loops, A/B repeat, waveforms, streaming services, and cloud features.
+The app deliberately excludes loops, A/B repeat, streaming services, and cloud features.
 
 ### Lyrics acceptance test
 
@@ -95,3 +103,5 @@ Chrome was not installed in the implementation environment. Manual listening and
 After adding lyrics, the local-player regression checks passed again. Browser tests also covered filename and generated ID3 tag inference, exact and ambiguous matches, result selection, keyboard safety, cached reuse, automatic lookup opt-out, safe text rendering, timestamped-text fallback, no results, network failures, stale responses, and rate limits. A live LRCLIB lookup for Red Hot Chili Peppers / Scar Tissue succeeded from the `file://` page in Edge. No application JavaScript exceptions were observed.
 
 The compact layout and lyric following passed Edge checks at desktop (1366×768) and mobile (390×844) sizes. Tests covered above-fold lyric visibility, timed highlighting, cue jumps, manual scroll interruption/resume, percentage-based fallback, start/end positions, offsets, and repeated timestamps. Playback and lookup regression checks also passed after this update.
+
+Waveform checks in Edge passed native WAV decoding, real pointer click/drag seeking, preservation of play/pause state, oversized-file fallback, decoder failure, and recovery. Local playback regressions, the backtick shortcut, and Genius link checks also passed with no application JavaScript exceptions. To test manually, load a song with quiet and loud sections, wait for the waveform, click/drag while playing and paused, and switch files while analysis is running.
