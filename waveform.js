@@ -14,8 +14,8 @@ window.Waveform = (() => {
   const yieldToUI = () => new Promise((resolve) => setTimeout(resolve, 0));
 
   function view() {
-    const span = Math.min(trackDuration, Number(zoom.value) || trackDuration);
-    return { start: Math.max(0, Math.min(trackDuration - span, Math.floor(progress * trackDuration / span) * span)), span };
+    const span = Number(zoom.value);
+    return span ? { start: progress * trackDuration - span / 2, span } : { start: 0, span: trackDuration };
   }
 
   function paint(target, start, span, width, height) {
@@ -23,7 +23,10 @@ window.Waveform = (() => {
     const bars = Math.max(1, Math.floor(width / (2 * (window.devicePixelRatio || 1))));
     const step = width / bars;
     for (let bar = 0; bar < bars; bar++) {
-      const from = Math.min(count - 1, Math.floor((start + span * bar / bars) / trackDuration * count));
+      const barStart = start + span * bar / bars;
+      const barEnd = start + span * (bar + 1) / bars;
+      if (barEnd <= 0 || barStart >= trackDuration) continue;
+      const from = Math.max(0, Math.min(count - 1, Math.floor(barStart / trackDuration * count)));
       const to = Math.min(count, Math.max(from + 1, Math.floor((start + span * (bar + 1) / bars) / trackDuration * count)));
       let energy = 0, transient = 0, bass = 0, mid = 0, high = 0;
       for (let i = from; i < to; i++) {
@@ -57,7 +60,7 @@ window.Waveform = (() => {
     paint(context, current.start, current.span, width, mainHeight);
     const tick = current.span <= 10 ? 2 : current.span <= 30 ? 5 : Math.max(10, Math.ceil(current.span / 6 / 10) * 10);
     context.font = `${10 * ratio}px Segoe UI`;
-    for (let time = Math.ceil(current.start / tick) * tick; time <= current.start + current.span; time += tick) {
+    for (let time = Math.max(0, Math.ceil(current.start / tick) * tick); time <= Math.min(trackDuration, current.start + current.span); time += tick) {
       const x = (time - current.start) / current.span * width;
       context.fillStyle = '#ffffff15'; context.fillRect(x, 0, 1, mainHeight);
       context.fillStyle = '#929e97';
@@ -65,9 +68,10 @@ window.Waveform = (() => {
     }
     context.drawImage(image, 0, overviewTop);
     context.fillStyle = '#ffffff12';
-    context.fillRect(current.start / trackDuration * width, overviewTop, current.span / trackDuration * width, height - overviewTop);
+    const viewStart = Math.max(0, current.start), viewEnd = Math.min(trackDuration, current.start + current.span);
+    context.fillRect(viewStart / trackDuration * width, overviewTop, (viewEnd - viewStart) / trackDuration * width, height - overviewTop);
     context.strokeStyle = '#d8ee9680';
-    context.strokeRect(current.start / trackDuration * width, overviewTop, current.span / trackDuration * width, height - overviewTop - 1);
+    context.strokeRect(viewStart / trackDuration * width, overviewTop, (viewEnd - viewStart) / trackDuration * width, height - overviewTop - 1);
     const playhead = (progress * trackDuration - current.start) / current.span * width;
     context.fillStyle = '#f0f8db';
     context.fillRect(Math.max(0, Math.min(width - 2, playhead)), 0, 2, mainHeight);
@@ -178,7 +182,7 @@ window.Waveform = (() => {
     if (!bounds.width) return;
     const fraction = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
     const current = dragView || view();
-    canvas.dispatchEvent(new CustomEvent('waveformseek', { detail: (current.start + fraction * current.span) / trackDuration }));
+    canvas.dispatchEvent(new CustomEvent('waveformseek', { detail: Math.max(0, Math.min(1, (current.start + fraction * current.span) / trackDuration)) }));
   }
   canvas.addEventListener('pointerdown', (event) => {
     if (!peaks || !event.isPrimary || event.button !== 0) return;
