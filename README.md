@@ -10,7 +10,7 @@ Drag an audio file anywhere onto the page, or click **Open audio file**. MP3, WA
 
 ## Install on Android and use offline
 
-The same app can be installed as a Progressive Web App (PWA). On phones, **Cue points** and **Lyrics** switch between panels, and **Show waveform** expands the waveform when needed.
+The same app can be installed as a Progressive Web App (PWA). On phones, lyrics open by default. Playback controls stay at the bottom, and **Show waveform** expands the waveform when needed. Tap a timed lyric, then **Save cue 1**; select the next verse and tap **Save cue 2**. Saving uses the selected line's timestamp even during playback and advances to the next empty cue. After saving, select another lyric or save the current playback position. **Use current time** clears a lyric selection explicitly. Saved cue buttons jump immediately; **Edit cues** opens naming, replacement, and deletion controls. Full cue banks disable saving until you clear a slot. Plain lyrics use the current playback position.
 
 1. Publish this folder on an HTTPS static host. For this repository, GitHub Pages can serve the `main` branch's root folder: repository **Settings → Pages → Build and deployment → Deploy from a branch → main → / (root)**. See [GitHub's publishing instructions](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site). These local changes must be pushed before the hosted site can include them; implementation does not publish the site automatically.
 2. Open the published URL in Chrome on Android while online. With GitHub Pages enabled for this repository, the expected URL is `https://ugrodrigo.github.io/music-practice-player/`.
@@ -63,7 +63,7 @@ Use a filename such as `Red Hot Chili Peppers - Scar Tissue.mp3`. If the artist 
 
 The app first requests a match using title, artist, available album information, and duration. An exact normalized artist/title match within two seconds of the track's duration can display automatically. Otherwise, search results let you choose a recording; closest durations appear first. Matching can still be wrong for alternate versions, so check the displayed artist/title/album and search again if needed.
 
-The desktop layout keeps a compact player and cue grid on the left and lyrics visible on the right. Search settings collapse when lyrics load; open **Find or change lyrics** to correct the match. On narrow screens, use **Cue points** or **Lyrics** to choose the panel below the compact player.
+The desktop layout keeps a compact player and cue grid on the left and lyrics visible on the right. Search settings collapse when lyrics load; open **Find or change lyrics** to correct the match. On narrow screens, lyrics are the main view, with cue saving and playback always accessible in the bottom bar; use **Edit cues** to manage saved sections.
 
 **Follow song** is enabled for each loaded song. When LRCLIB supplies timed lyrics, the current line is highlighted and centered using the audio position, including after cue jumps and seeks. LRC offsets and repeated timestamps are supported. With plain lyrics, scrolling follows the percentage of the song played; the panel labels this approximate because intros, solos, and uneven verse lengths can shift alignment. Playback speed changes work naturally because following uses the audio's position.
 
@@ -129,3 +129,5 @@ The compact layout and lyric following passed Edge checks at desktop (1366×768)
 Waveform checks in Edge passed native WAV decoding, real pointer click/drag seeking, preservation of play/pause state, oversized-file fallback, decoder failure, and recovery. Local playback regressions, the backtick shortcut, and Genius link checks also passed with no application JavaScript exceptions. To test manually, load a song with quiet and loud sections, wait for the waveform, click/drag while playing and paused, and switch files while analysis is running.
 
 The DJ-style update additionally passed color-discrimination tests using decoded 60 Hz, 1 kHz, and 6 kHz test tones, and verified that a click in the zoomed 10-second view seeks to the correct time. Existing playback and waveform fallback checks passed again.
+
+Phone cue workflow checks passed in Edge: a selected lyric timestamp stayed fixed while playback advanced, saving selected the next empty slot, current-position saving and quick cue jumps worked, and the speed control fit widths from 320 to 760 pixels. Offline reopening and explicit app updates passed again. Physical Android testing remains necessary.

@@ -52,13 +52,17 @@
       for (const name of ['cues', 'lyrics']) document.getElementById(`show-${name}`).setAttribute('aria-pressed', String(name === panel));
     });
   }
-  document.body.dataset.mobilePanel = 'cues';
+  document.body.dataset.mobilePanel = 'lyrics';
   document.getElementById('toggle-waveform').addEventListener('click', (event) => {
     const expanded = document.body.dataset.waveformExpanded !== 'true';
     document.body.dataset.waveformExpanded = String(expanded);
     event.currentTarget.setAttribute('aria-expanded', String(expanded));
     event.currentTarget.textContent = expanded ? 'Hide waveform' : 'Show waveform';
   });
+
+  new ResizeObserver(() => {
+    document.documentElement.style.setProperty('--dock-height', `${document.getElementById('playback-dock').getBoundingClientRect().height}px`);
+  }).observe(document.getElementById('playback-dock'));
 
   if (location.protocol === 'file:') {
     status.textContent = 'Local file mode · open the HTTPS website on Android to install';

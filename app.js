@@ -17,6 +17,49 @@
   let frame = 0;
   let dragDepth = 0;
   const cards = [];
+  let selectedLyricTime = null;
+  const quickButtons = Array.from({ length: 9 }, (_, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.addEventListener('click', () => jumpCue(index));
+    $('quick-cues').append(button);
+    return button;
+  });
+
+  function renderQuickCues() {
+    const next = cues.findIndex(cue => !cue);
+    $('save-next-cue').disabled = !ready || next < 0;
+    $('save-next-cue').textContent = next < 0 ? 'All 9 cues saved' : `Save cue ${next + 1}`;
+    $('use-current-time').hidden = selectedLyricTime === null;
+    $('cue-selection').textContent = selectedLyricTime === null
+      ? 'Save current position - or tap a timed lyric'
+      : `Selected lyric - ${formatTime(selectedLyricTime)}`;
+    quickButtons.forEach((button, index) => {
+      const cue = cues[index];
+      button.hidden = !cue;
+      button.disabled = !ready;
+      button.textContent = `${index + 1} - ${cue?.name || (cue ? formatTime(cue.time) : '')}`;
+      button.setAttribute('aria-label', `Jump to cue ${index + 1}${cue ? ', ' + formatTime(cue.time) : ''}`);
+    });
+  }
+
+  function clearLyricSelection() {
+    selectedLyricTime = null;
+    document.querySelectorAll('.lyric-line.selected').forEach(node => {
+      node.classList.remove('selected'); node.setAttribute('aria-pressed', 'false');
+    });
+    renderQuickCues();
+  }
+
+  $('use-current-time').addEventListener('click', clearLyricSelection);
+  $('lyrics-text').addEventListener('lyricschanged', clearLyricSelection);
+  $('save-next-cue').addEventListener('click', () => {
+    const next = cues.findIndex(cue => !cue);
+    if (!ready || next < 0) return;
+    setCue(next, selectedLyricTime ?? audio.currentTime);
+    clearLyricSelection();
+    $('cue-selection').textContent = `Cue ${next + 1} saved at ${formatTime(cues[next].time)}. Select the next verse.`;
+  });
 
   function formatTime(seconds) {
     const tenths = Math.floor(Math.max(0, Number.isFinite(seconds) ? seconds : 0) * 10);
@@ -73,6 +116,7 @@
     card.set.disabled = !ready;
     card.set.textContent = `${cue ? "Update" : "Set"} · Shift + ${index + 1}`;
     card.reset.disabled = !ready || !cue;
+    renderQuickCues();
   }
 
   function flashCue(index) {
@@ -82,9 +126,9 @@
     card.timer = setTimeout(() => card.root.classList.remove("flash"), 300);
   }
 
-  function setCue(index) {
+  function setCue(index, time = audio.currentTime) {
     if (!ready) return;
-    cues[index] = { time: audio.currentTime, name: cues[index]?.name || "" };
+    cues[index] = { time: Math.max(0, Math.min(audio.duration, time)), name: cues[index]?.name || "" };
     renderCue(index);
     persistCues();
     flashCue(index);
@@ -121,6 +165,7 @@
     card.name.addEventListener("input", () => {
       if (!cues[index]) return;
       cues[index].name = card.name.value;
+      renderQuickCues();
       card.jump.setAttribute("aria-label", `Jump to cue ${index + 1}, ${formatTime(cues[index].time)}, ${card.name.value}`);
       persistCues();
     });
@@ -263,7 +308,13 @@
   document.getElementById('waveform').addEventListener('waveformseek', (event) => {
     if (ready) seekTo(event.detail * audio.duration);
   });
-  document.getElementById('lyrics-text').addEventListener('lyricsseek', (event) => seekTo(event.detail));
+  document.getElementById('lyrics-text').addEventListener('lyricsseek', (event) => {
+    seekTo(event.detail);
+    if (ready && Number.isFinite(event.detail)) {
+      selectedLyricTime = Math.max(0, Math.min(audio.duration, event.detail));
+      renderQuickCues();
+    }
+  });
   ui.speed.addEventListener("change", () => changeSpeed(Number(ui.speed.value)));
 
   document.addEventListener("keydown", (event) => {

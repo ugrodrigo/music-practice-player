@@ -146,11 +146,13 @@ window.LyricsPanel = (() => {
     $('results').replaceChildren();
     $('results').hidden = true;
     $('match').hidden = true;
+    $('text').dispatchEvent(new Event('lyricschanged'));
     $('text').replaceChildren();
     $('text').hidden = true;
   }
 
   function reset() {
+    $('text').dispatchEvent(new Event('lyricschanged'));
     cancel();
     fileKey = ''; album = ''; duration = 0;
     playbackTime = 0; playbackDuration = 0;
@@ -187,6 +189,7 @@ window.LyricsPanel = (() => {
     lineNodes = []; activeLine = -1;
     hasLyrics = !record.instrumental && !!(timedLines.length || record.plainLyrics.trim());
     // Build text nodes only; lyrics returned by the service are never HTML.
+    $('text').dispatchEvent(new Event('lyricschanged'));
     $('text').replaceChildren();
     $('text').classList.toggle('synced', !!timedLines.length);
     if (timedLines.length) {
@@ -198,7 +201,11 @@ window.LyricsPanel = (() => {
         const stamp = `${Math.floor(line.time / 60)}:${(line.time % 60).toFixed(1).padStart(4, '0')}`;
         node.title = `Jump to ${stamp}`;
         node.setAttribute('aria-label', `Jump to ${stamp}: ${line.text || 'Instrumental break'}`);
+        node.setAttribute('aria-pressed', 'false');
         node.addEventListener('click', () => {
+          lineNodes.forEach(line => { line.classList.remove('selected'); line.setAttribute('aria-pressed', 'false'); });
+          node.classList.add('selected');
+          node.setAttribute('aria-pressed', 'true');
           $('follow').checked = true;
           renderFollowMode();
           $('text').dispatchEvent(new CustomEvent('lyricsseek', { detail: line.time }));

@@ -21,7 +21,7 @@
       <span class="local-badge"><span aria-hidden="true">●</span> Local audio. Just you.</span>
     </header>
     <div class="install-row"><span id="offline-status" role="status">Local audio stays on your device.</span><button id="install-app" class="button button-outline" type="button" hidden>Install app</button><button id="update-app" class="button button-outline" type="button" hidden>Update &amp; reload</button></div>
-    <nav class="mobile-panels" aria-label="Practice panel"><button id="show-cues" type="button" aria-pressed="true">Cue points</button><button id="show-lyrics" type="button" aria-pressed="false">Lyrics</button></nav>
+    <nav class="mobile-panels" aria-label="Practice panel"><button id="show-cues" type="button" aria-pressed="false">Edit cues</button><button id="show-lyrics" type="button" aria-pressed="true">Lyrics</button></nav>
 
     <div class="practice-content">
     <section class="player panel" aria-label="Audio player">
@@ -30,7 +30,7 @@
         <button id="open-file" class="button button-outline" type="button"><span aria-hidden="true">＋</span> Open audio file</button>
         <input id="file-input" type="file" accept="audio/*,.mp3,.wav,.m4a" hidden>
       </div>
-      <div class="clock-row"><span id="current-time" class="clock" aria-label="Current playback time">00:00.0</span><span class="duration">/ <span id="duration">00:00.0</span></span></div>
+
       <label class="sr-only" for="seek">Playback position</label>
       <button id="toggle-waveform" class="mobile-waveform-toggle" type="button" aria-expanded="false" aria-controls="waveform-wrap">Show waveform</button>
       <div class="waveform-wrap" id="waveform-wrap" hidden>
@@ -38,6 +38,13 @@
         <canvas id="waveform" role="img" aria-label="Frequency-colored waveform with a full-track overview below. Use the playback position slider for keyboard seeking." title="Click or drag the main waveform to fine-seek; use the overview below to jump across the track"></canvas>
         <p id="waveform-status" role="status">Building waveform…</p>
       </div>
+      <div id="playback-dock">
+      <div class="mobile-cue-tools">
+        <div id="quick-cues" aria-label="Saved cue points"></div>
+        <div class="cue-save-row"><button id="save-next-cue" class="button button-primary" type="button" disabled>Save cue 1</button><button id="use-current-time" type="button" hidden>Use current time</button></div>
+        <p id="cue-selection" role="status">Tap a timed lyric, or save the current position.</p>
+      </div>
+      <div class="clock-row"><span id="current-time" class="clock" aria-label="Current playback time">00:00.0</span><span class="duration">/ <span id="duration">00:00.0</span></span></div>
       <input id="seek" class="seek" type="range" min="0" max="0" step="0.01" value="0" disabled aria-valuetext="00:00.0">
       <div class="transport-row">
         <div class="transport">
@@ -46,6 +53,7 @@
           <button id="forward" class="button button-subtle" type="button" disabled aria-label="Seek forward 2 seconds"><span>2s</span> ↷</button>
         </div>
         <div class="speed-control"><label for="speed">Playback speed</label><select id="speed" disabled><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="0.9">0.9×</option><option value="1" selected>1.0×</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option></select></div>
+      </div>
       </div>
       <p id="status" class="status" role="status" aria-live="polite">Ready when you are. Your audio stays on this device.</p>
       <p id="storage-warning" class="warning" role="status" hidden></p>

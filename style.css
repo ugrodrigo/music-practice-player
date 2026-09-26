@@ -158,3 +158,44 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
   .cue-jump { min-height: 58px; }
   .cue-name { font-size: 16px; }
 }
+
+.mobile-cue-tools { display: none; }
+.lyric-line.selected { outline: 2px solid var(--accent); outline-offset: -2px; color: #eef6d8; }
+@media (max-width: 760px) {
+  .workspace { padding-bottom: calc(var(--dock-height, 260px) + 20px); }
+  .app-header { margin-bottom: 10px; }
+  .install-row { margin-bottom: 10px; }
+  .player { padding: 10px 12px; }
+  .player .status { margin-top: 6px; }
+  .practice-content { gap: 10px; }
+  #playback-dock { position: fixed; z-index: 10; bottom: 0; left: 0; right: 0; padding: 8px max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); background: #1a1f1c; border-top: 1px solid #485340; box-shadow: 0 -4px 18px #0005; }
+  #playback-dock .clock-row { margin: 4px 0; }
+  #playback-dock .clock { font-size: 23px; letter-spacing: -.5px; }
+  #playback-dock .duration { font-size: 12px; }
+  #playback-dock .seek { margin: 12px 0 16px; }
+  .transport-row { display: grid; grid-template-columns: minmax(0, 1fr) 76px; gap: 8px; }
+  .transport { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr); gap: 5px; min-width: 0; }
+  .transport .button { min-width: 0; padding: 10px 4px; gap: 4px; }
+  .transport kbd { display: none; }
+  .speed-control { min-width: 0; }
+  #speed { width: 100%; min-width: 0; min-height: 44px; padding: 8px 4px; }
+  .mobile-cue-tools { display: block; }
+  #quick-cues { display: flex; gap: 6px; overflow-x: auto; }
+  #quick-cues:has(button:not([hidden])) { margin-bottom: 6px; }
+  #quick-cues button { flex: 0 0 auto; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 44px; padding: 6px 10px; background: #293423; border: 1px solid #536342; border-radius: 8px; font-size: 12px; }
+  .cue-save-row { display: flex; gap: 8px; }
+  #save-next-cue { min-width: 0; flex: 1; }
+  #use-current-time { max-width: 115px; background: transparent; border: 1px solid var(--line); border-radius: 8px; font-size: 12px; }
+  #cue-selection { font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .lyrics { height: max(300px, calc(100dvh - var(--dock-height, 260px) - 220px)); min-height: 300px; max-height: none; padding: 12px; }
+  .lyrics-follow-row { margin: 8px 0; }
+  .lyrics-text { margin-top: 8px; }
+  .section-heading > p { display: none; }
+  #lyrics-form input { font-size: 16px; }
+}
+@media (max-width: 350px) {
+  .transport-row { grid-template-columns: minmax(0, 1fr); }
+  .speed-control { justify-content: flex-end; }
+  .speed-control label { display: block; }
+  #speed { width: 90px; }
+}
