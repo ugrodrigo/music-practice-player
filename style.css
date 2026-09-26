@@ -34,7 +34,11 @@ h1 { font-size: 23px; font-weight: 600; letter-spacing: -.7px; }
 .seek::-webkit-slider-thumb { appearance: none; width: 15px; height: 15px; background: var(--accent); border-radius: 50%; }
 .seek::-moz-range-thumb { width: 15px; height: 15px; background: var(--accent); border: 0; border-radius: 50%; }
 .waveform-wrap { margin: 10px 0 0; border: 1px solid var(--line); border-radius: 8px; background: #131a17; overflow: hidden; }
-#waveform { display: block; width: 100%; height: 72px; cursor: crosshair; touch-action: none; }
+#waveform { display: block; width: 100%; height: 150px; cursor: crosshair; touch-action: none; }
+.waveform-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px; font-size: 11px; color: var(--muted); }
+.waveform-toolbar b { font-weight: 500; }
+.wave-bass { color: #ff6760; } .wave-mid { color: #68e18d; } .wave-high { color: #6aafff; }
+.waveform-toolbar select { font-size: 11px; padding: 3px 5px; margin-left: 5px; }
 #waveform-status { padding: 5px 10px; font-size: 11px; color: var(--muted); }
 .transport-row { justify-content: space-between; gap: 20px; }
 .transport { gap: 12px; }

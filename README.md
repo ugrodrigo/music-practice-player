@@ -16,11 +16,13 @@ Each cue has a large jump button, an editable name, a Set/Update button, and a R
 
 ## Colored waveform
 
-A compact waveform appears above the seek bar after the audio is decoded locally. Bar height and color represent relative amplitude (cooler colors for quieter sections, warmer colors for louder sections), not instruments or frequency bands. The played portion is brighter and a vertical cursor marks the current position.
+A DJ-style waveform appears above the seek bar after local analysis. Red represents bass, green mids, and blue highs; mixed colors reflect mixed frequency content. These are approximate frequency bands, not instrument or vocal detection. The color convention is inspired by [Serato's waveform display](https://support.serato.com/hc/en-us/articles/224969307-Main-Waveform-Display); this app does not reproduce its proprietary analysis.
 
-Click or drag on the waveform to seek. Playing stays playing; paused stays paused. Cue jumps and keyboard seeks update the cursor and lyrics as usual. The standard seek bar remains available for keyboard and assistive-technology access.
+The main view follows the playhead, with a choice of **10 seconds**, **30 seconds** (default), or **Full track**. A smaller overview below always shows the entire song and outlines the visible window. Time labels are seconds, not detected beats. Average signal energy sets the body height, with faint peak outlines for transients, so a few loud samples no longer turn whole sections into solid blocks.
 
-Waveform analysis runs separately from playback, with no upload or dependencies. Files over 100 MiB or 20 minutes skip analysis to limit memory usage. Unsupported decoding falls back to the seek bar. Switching songs discards stale results and serializes decoding to avoid several large analyses at once. The decoded audio is reduced to a small peak array, then released; waveform data is not stored in browser storage.
+Click or drag on the main waveform to seek within its visible time window; use the lower overview to jump anywhere in the song. The time window stays fixed during a drag. Playing stays playing; paused stays paused. Cue jumps and keyboard seeks update the cursor, zoomed view, and lyrics as usual. The standard seek bar remains available for keyboard and assistive-technology access.
+
+Waveform analysis runs separately from playback, with no upload or dependencies. Files over 100 MiB or 20 minutes skip analysis to limit memory usage. Unsupported decoding falls back to the seek bar. Switching songs discards stale results and serializes decoding to avoid several large analyses at once. The decoded audio is reduced to energy, peak, and frequency-band arrays at approximately 10 ms resolution, then released; waveform data is not stored in browser storage. Analysis uses a 16 kHz overview decode and approximate crossovers at 200 Hz and 2.5 kHz; this is a navigation aid, not a precision spectrum analyzer.
 
 | Shortcut | Action |
 |---|---|
@@ -105,3 +107,5 @@ After adding lyrics, the local-player regression checks passed again. Browser te
 The compact layout and lyric following passed Edge checks at desktop (1366×768) and mobile (390×844) sizes. Tests covered above-fold lyric visibility, timed highlighting, cue jumps, manual scroll interruption/resume, percentage-based fallback, start/end positions, offsets, and repeated timestamps. Playback and lookup regression checks also passed after this update.
 
 Waveform checks in Edge passed native WAV decoding, real pointer click/drag seeking, preservation of play/pause state, oversized-file fallback, decoder failure, and recovery. Local playback regressions, the backtick shortcut, and Genius link checks also passed with no application JavaScript exceptions. To test manually, load a song with quiet and loud sections, wait for the waveform, click/drag while playing and paused, and switch files while analysis is running.
+
+The DJ-style update additionally passed color-discrimination tests using decoded 60 Hz, 1 kHz, and 6 kHz test tones, and verified that a click in the zoomed 10-second view seeks to the correct time. Existing playback and waveform fallback checks passed again.
