@@ -35,7 +35,7 @@ window.LyricsPanel = (() => {
 
   function renderFollowMode() {
     $('follow').disabled = !hasLyrics;
-    $('mode').textContent = !hasLyrics ? 'Waiting for lyrics' : !$('follow').checked ? 'Scrolling paused' : timedLines.length ? 'Timed lyrics' : 'Approximate · song %';
+    $('mode').textContent = !hasLyrics ? 'Waiting for lyrics' : !$('follow').checked ? 'Scrolling paused' : timedLines.length ? 'Timed · click a line to seek' : 'Approximate · song %';
     $('follow').title = 'Follow playback. Scrolling the lyrics yourself pauses following; check this again to resume.';
   }
 
@@ -191,9 +191,19 @@ window.LyricsPanel = (() => {
     $('text').classList.toggle('synced', !!timedLines.length);
     if (timedLines.length) {
       for (const line of timedLines) {
-        const node = document.createElement('p');
+        const node = document.createElement('button');
+        node.type = 'button';
         node.className = 'lyric-line';
         node.textContent = line.text || '♪';
+        const stamp = `${Math.floor(line.time / 60)}:${(line.time % 60).toFixed(1).padStart(4, '0')}`;
+        node.title = `Jump to ${stamp}`;
+        node.setAttribute('aria-label', `Jump to ${stamp}: ${line.text || 'Instrumental break'}`);
+        node.addEventListener('click', () => {
+          $('follow').checked = true;
+          renderFollowMode();
+          $('text').dispatchEvent(new CustomEvent('lyricsseek', { detail: line.time }));
+          update(playbackTime, playbackDuration, true);
+        });
         lineNodes.push(node);
         $('text').append(node);
       }

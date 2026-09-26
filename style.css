@@ -117,7 +117,9 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
 #lyrics-settings { flex-shrink: 0; max-height: 55%; overflow-y: auto; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
 #lyrics-settings summary { cursor: pointer; color: #b9c5ad; font-size: 12px; }
 .lyrics > :not(.lyrics-text):not(.lyrics-results):not(#lyrics-settings) { flex-shrink: 0; }
-.lyric-line { padding: 7px 10px; border-left: 2px solid transparent; color: #9ca697; white-space: pre-wrap; }
+.lyric-line { display: block; width: 100%; text-align: left; font: inherit; line-height: inherit; background: transparent; padding: 7px 10px; border: 0; border-left: 2px solid transparent; color: #9ca697; white-space: pre-wrap; cursor: pointer; }
+.lyric-line:hover { color: #eef6d8; background: #243020; }
+.lyric-line:focus-visible { outline-offset: -2px; }
 .lyric-line.current { color: #eef6d8; background: #2c3924; border-left-color: var(--accent); border-radius: 0 6px 6px 0; }
 .lyrics-text.synced { white-space: normal; }
 .practice-content + .shortcuts { margin-top: 22px; }

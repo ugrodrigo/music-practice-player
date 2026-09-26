@@ -53,6 +53,8 @@ The desktop layout keeps a compact player and cue grid on the left and lyrics vi
 
 Scroll or touch the lyric text to pause following, then check **Follow song** to resume at the current position. You can also disable it directly. Manual scrolling never seeks or pauses audio. Only the lyric panel scrolls automatically, not the page. Instrumental records are labeled clearly and have following disabled.
 
+Click a timed lyric line to jump to its timestamp and resume lyric following. Playing stays playing; paused stays paused. You can also Tab to a line and press Enter; Space keeps its usual Play/Pause function. Plain lyrics remain read-only because they have no reliable line timestamps. Timing accuracy depends on the selected LRCLIB recording.
+
 Only the search details are sent to [LRCLIB](https://lrclib.net/docs), using its public API and an identifying client header. The audio file is never uploaded. There is no API key, dependency, proxy, or backend. Requests are sequential, spaced apart, have a timeout, and honor rate-limit retry instructions. A failed lookup does not interrupt audio playback or cues.
 
 The last ten selected lyrics records are cached in `localStorage`, associated with filename, size, and modification time. Reopening the same file restores cached lyrics without a network request, including while offline. Editing/replacing a file can cause a fresh lookup. If browser storage is unavailable or full, lyrics still display for the session. Clearing browser storage removes cached lyrics and preferences.

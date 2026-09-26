@@ -263,6 +263,7 @@
   document.getElementById('waveform').addEventListener('waveformseek', (event) => {
     if (ready) seekTo(event.detail * audio.duration);
   });
+  document.getElementById('lyrics-text').addEventListener('lyricsseek', (event) => seekTo(event.detail));
   ui.speed.addEventListener("change", () => changeSpeed(Number(ui.speed.value)));
 
   document.addEventListener("keydown", (event) => {
