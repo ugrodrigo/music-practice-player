@@ -358,8 +358,8 @@
     ui["file-input"].value = "";
   });
   ui.play.addEventListener("click", togglePlayback);
-  ui.back.addEventListener("click", () => seekTo(audio.currentTime - 2));
-  ui.forward.addEventListener("click", () => seekTo(audio.currentTime + 2));
+  ui.back.addEventListener("click", () => seekTo(audio.currentTime - 0.5));
+  ui.forward.addEventListener("click", () => seekTo(audio.currentTime + 0.5));
   ui.seek.addEventListener("input", () => seekTo(Number(ui.seek.value)));
   document.getElementById('waveform').addEventListener('waveformseek', (event) => {
     if (ready) seekTo(event.detail * audio.duration);
