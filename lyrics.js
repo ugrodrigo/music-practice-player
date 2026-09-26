@@ -8,6 +8,7 @@ window.LyricsPanel = (() => {
   let fileKey = '', duration = 0, album = '', revision = 0, controller;
   let queue = Promise.resolve(), nextRequest = 0, blockedUntil = 0;
   let timedLines = [], lineNodes = [], activeLine = -1;
+  let scrubbing = false, scrubTimer = 0;
   let playbackTime = 0, playbackDuration = 0, hasLyrics = false;
 
   function parseTimedLyrics(text) {
@@ -33,10 +34,18 @@ window.LyricsPanel = (() => {
     return groups.some((entry) => entry.text) ? groups : [];
   }
 
+  function showTab(find) {
+    document.querySelector('.lyrics').dataset.view = find ? 'find' : 'lyrics';
+    $('settings').open = find;
+    $('view').setAttribute('aria-pressed', String(!find));
+    $('find').setAttribute('aria-pressed', String(find));
+    requestAnimationFrame(() => update(playbackTime, playbackDuration, true));
+  }
+  $('view').addEventListener('click', () => showTab(false));
+  $('find').addEventListener('click', () => showTab(true));
+
   function renderFollowMode() {
-    $('follow').disabled = !hasLyrics;
-    $('mode').textContent = !hasLyrics ? 'Waiting for lyrics' : !$('follow').checked ? 'Scrolling paused' : timedLines.length ? 'Timed · click a line to seek' : 'Approximate · song %';
-    $('follow').title = 'Follow playback. Scrolling the lyrics yourself pauses following; check this again to resume.';
+    $('mode').textContent = !hasLyrics ? 'Waiting for lyrics' : timedLines.length ? 'Scroll to seek. Tap or hold a line to save a cue.' : 'Approximate scrolling - song %';
   }
 
   function update(time, total, force = false) {
@@ -61,7 +70,7 @@ window.LyricsPanel = (() => {
         lineNodes[index]?.setAttribute('aria-current', 'true');
       }
     }
-    if (!$('follow').checked) return;
+    if (scrubbing || document.getElementById('cue-bubble').matches(':popover-open')) return;
     const panel = $('text');
     if (timedLines.length) {
       if (!changed && !force) return;
@@ -140,6 +149,7 @@ window.LyricsPanel = (() => {
   }
 
   function clearLyrics() {
+    clearTimeout(scrubTimer); scrubbing = false;
     timedLines = []; lineNodes = []; activeLine = -1; hasLyrics = false;
     $('text').classList.remove('synced');
     renderFollowMode();
@@ -156,8 +166,8 @@ window.LyricsPanel = (() => {
     cancel();
     fileKey = ''; album = ''; duration = 0;
     playbackTime = 0; playbackDuration = 0;
-    $('follow').checked = true;
-    $('settings').open = true;
+
+    showTab(true);
     $('artist').value = ''; $('title').value = '';
     updateGeniusLink();
     for (const id of ['artist', 'title', 'search']) $(id).disabled = true;
@@ -202,21 +212,36 @@ window.LyricsPanel = (() => {
         node.title = `Jump to ${stamp}`;
         node.setAttribute('aria-label', `Jump to ${stamp}: ${line.text || 'Instrumental break'}`);
         node.setAttribute('aria-pressed', 'false');
-        node.addEventListener('click', () => {
+        const selectLine = () => {
+          scrubbing = false; clearTimeout(scrubTimer);
           lineNodes.forEach(line => { line.classList.remove('selected'); line.setAttribute('aria-pressed', 'false'); });
           node.classList.add('selected');
           node.setAttribute('aria-pressed', 'true');
-          $('follow').checked = true;
+
           renderFollowMode();
           $('text').dispatchEvent(new CustomEvent('lyricsseek', { detail: line.time }));
-          update(playbackTime, playbackDuration, true);
+          $('text').dispatchEvent(new CustomEvent('lyriccue', { detail: node }));
+        };
+        let holdTimer = 0, held = false, start = null;
+        const cancelHold = () => { clearTimeout(holdTimer); start = null; };
+        node.addEventListener('pointerdown', event => {
+          cancelHold(); held = false;
+          if (!event.isPrimary || event.button !== 0) return;
+          start = { x: event.clientX, y: event.clientY };
+          holdTimer = setTimeout(() => { held = true; selectLine(); }, 550);
         });
+        node.addEventListener('pointermove', event => {
+          if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10) cancelHold();
+        });
+        for (const event of ['pointerup', 'pointercancel', 'pointerleave']) node.addEventListener(event, cancelHold);
+        node.addEventListener('contextmenu', event => event.preventDefault());
+        node.addEventListener('click', () => { if (held) held = false; else selectLine(); });
         lineNodes.push(node);
         $('text').append(node);
       }
     } else $('text').textContent = record.instrumental ? 'Instrumental — no sung lyrics.' : record.plainLyrics || 'This record has no lyrics yet. Try another match.';
     $('text').hidden = false;
-    $('settings').open = !hasLyrics;
+    showTab(!hasLyrics);
     $('text').scrollTop = 0;
     renderFollowMode();
     update(playbackTime, playbackDuration || duration, true);
@@ -340,17 +365,44 @@ window.LyricsPanel = (() => {
   });
   $('form').addEventListener('submit', (event) => { event.preventDefault(); $('artist').blur(); $('title').blur(); findLyrics(); });
   for (const id of ['artist', 'title']) $(id).addEventListener('input', () => { cancel(); album = ''; updateGeniusLink(); $('results').hidden = true; status('Choose Find lyrics to search with these details.'); });
-  $('follow').addEventListener('change', () => { renderFollowMode(); update(playbackTime, playbackDuration, true); });
-  const pauseFollowing = () => {
-    if (!hasLyrics) return;
-    $('follow').checked = false;
-    renderFollowMode();
+  const finishScrub = () => {
+    scrubbing = false;
+    update(playbackTime, playbackDuration, true);
   };
-  for (const event of ['wheel', 'touchstart', 'pointerdown']) $('text').addEventListener(event, pauseFollowing, { passive: true });
-  $('text').addEventListener('keydown', (event) => {
-    if (['PageUp', 'PageDown', 'Home', 'End'].includes(event.key)) pauseFollowing();
+  const armScrub = () => {
+    if (!hasLyrics) return;
+    scrubbing = true;
+    clearTimeout(scrubTimer);
+    scrubTimer = setTimeout(finishScrub, 250);
+  };
+  for (const event of ['wheel', 'touchstart', 'pointerdown']) $('text').addEventListener(event, armScrub, { passive: true });
+  $('text').addEventListener('keydown', event => {
+    if (['PageUp', 'PageDown', 'Home', 'End', 'ArrowUp', 'ArrowDown'].includes(event.key)) armScrub();
   });
-  new ResizeObserver(() => update(playbackTime, playbackDuration, true)).observe($('text'));
+  $('text').addEventListener('scroll', () => {
+    if (!scrubbing || !hasLyrics) return;
+    clearTimeout(scrubTimer);
+    const panel = $('text');
+    let time;
+    if (timedLines.length) {
+      const center = panel.scrollTop + panel.clientHeight / 2;
+      let nearest = 0;
+      for (let i = 1; i < lineNodes.length; i++) {
+        if (Math.abs(lineNodes[i].offsetTop + lineNodes[i].offsetHeight / 2 - center) < Math.abs(lineNodes[nearest].offsetTop + lineNodes[nearest].offsetHeight / 2 - center)) nearest = i;
+      }
+      time = timedLines[nearest].time;
+    } else {
+      const range = panel.scrollHeight - panel.clientHeight;
+      if (range <= 0) return;
+      time = panel.scrollTop / range * playbackDuration;
+    }
+    $('text').dispatchEvent(new CustomEvent('lyricsscrub', { detail: time }));
+    scrubTimer = setTimeout(finishScrub, 180);
+  }, { passive: true });
+  new ResizeObserver(() => {
+    $('text').style.setProperty('--lyric-edge', `${Math.max(0, $('text').clientHeight / 2 - 22)}px`);
+    update(playbackTime, playbackDuration, true);
+  }).observe($('text'));
   renderFollowMode();
   return { reset, load, update };
 })();

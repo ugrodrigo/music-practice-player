@@ -42,8 +42,8 @@
       <div id="playback-dock">
       <div class="mobile-cue-tools">
         <div id="quick-cues" aria-label="Saved cue points"></div>
-        <div class="cue-save-row"><button id="save-next-cue" class="button button-primary" type="button" disabled>Save cue 1</button><button id="use-current-time" type="button" hidden>Use current time</button></div>
-        <p id="cue-selection" role="status">Tap a timed lyric, or save the current position.</p>
+        <button id="cue-at-position" type="button">+ Cue</button>
+        <p id="cue-feedback" class="sr-only" role="status"></p>
       </div>
       <div class="clock-row"><span id="current-time" class="clock" aria-label="Current playback time">00:00.0</span><span class="duration">/ <span id="duration">00:00.0</span></span></div>
       <input id="seek" class="seek" type="range" min="0" max="0" step="0.01" value="0" disabled aria-valuetext="00:00.0">
@@ -67,9 +67,10 @@
     </section>
 
     <aside class="lyrics panel" aria-labelledby="lyrics-heading">
-      <div class="lyrics-heading"><h2 id="lyrics-heading">Lyrics</h2><div class="lyrics-links"><a id="lyrics-genius" target="_blank" rel="noopener noreferrer" hidden>Find on Genius ↗</a><a href="https://lrclib.net" target="_blank" rel="noopener noreferrer">LRCLIB ↗</a></div></div>
-      <div class="lyrics-follow-row"><label><input id="lyrics-follow" type="checkbox" checked> Follow song</label><span id="lyrics-mode">Waiting for lyrics</span></div>
-      <details id="lyrics-settings" open><summary>Find or change lyrics</summary>
+      <div class="lyrics-heading"><button id="lyrics-view" type="button" aria-pressed="true">Lyrics</button><a id="lyrics-genius" target="_blank" rel="noopener noreferrer" hidden>Find on Genius</a><button id="lyrics-find" type="button" aria-pressed="false">Find lyrics</button></div>
+      <h2 id="lyrics-heading" class="sr-only">Lyrics</h2>
+      <p id="lyrics-mode" class="lyrics-note">Waiting for lyrics</p>
+      <details id="lyrics-settings" open><summary class="sr-only">Find lyrics</summary>
       <label class="lyrics-auto"><input id="lyrics-auto" type="checkbox" checked> Auto-find lyrics</label>
       <p class="lyrics-note">Looks up song details online. Your audio stays local.</p>
       <form id="lyrics-form">
@@ -93,6 +94,11 @@
       <p class="shortcut-note">Shortcuts pause while typing in cue names or lyrics search fields. Press Enter or Escape to finish editing a cue name.</p>
     </footer>
   </main>
+  <div id="cue-bubble" popover="auto" aria-label="Save a cue">
+    <p id="cue-selection" role="status"></p>
+    <button id="save-next-cue" class="button button-primary" type="button" disabled>Save cue 1</button>
+    <button id="use-current-time" type="button" hidden>Use current time</button>
+  </div>
   <div id="drop-overlay" class="drop-overlay" hidden><div><span aria-hidden="true">↓</span><h2>Drop your next song</h2><p>Audio stays on your device.</p></div></div>
 </body>
 </html>
