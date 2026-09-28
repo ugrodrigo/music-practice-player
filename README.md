@@ -141,3 +141,5 @@ Before the first sung line, lyrics start at the top without a highlighted line; 
 The lyric hold popup has been removed. Lyrics only seek/select; numbered cue buttons handle saving, jumping, and hold-to-overwrite.
 
 Scrolling waveform bars sample fixed intervals anchored to the track, so their heights and colors remain stable as they move horizontally.
+
+While audio is playing and the app is visible, it requests a screen wake lock to prevent automatic dimming/locking. Pausing, ending playback, or leaving the app releases it; returning during playback requests it again. The player shows whether the screen is being kept awake or the request failed. Use the HTTPS site or installed app: plain HTTP phone previews do not support this API. Device battery saver or browser policy can refuse/revoke the lock. Manual locking and OS app termination cannot be prevented. See [MDN Screen Wake Lock](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API).

@@ -246,8 +246,54 @@
     if (ready && !audio.paused && !audio.ended) frame = requestAnimationFrame(tick);
   }
 
+  let screenLock = null, screenLockPending = false;
+  const wantsScreenAwake = () => ready && audio && !audio.paused && !audio.ended && document.visibilityState === 'visible';
+  const screenStatus = message => {
+    $('screen-awake-status').textContent = message;
+    $('screen-awake-status').hidden = !message;
+  };
+  const releaseScreenLock = lock => { if (lock) lock.release().catch(() => {}); };
+  async function syncScreenLock() {
+    if (!wantsScreenAwake()) {
+      const previous = screenLock;
+      screenLock = null;
+      releaseScreenLock(previous);
+      screenStatus('');
+      return;
+    }
+    if (!window.isSecureContext || !navigator.wakeLock) {
+      screenStatus('Keep screen on unavailable in this browser or connection.');
+      return;
+    }
+    if (screenLock || screenLockPending) return;
+    screenLockPending = true;
+    try {
+      const lock = await navigator.wakeLock.request('screen');
+      if (!wantsScreenAwake()) { releaseScreenLock(lock); return; }
+      screenLock = lock;
+      lock.addEventListener('release', () => {
+        if (screenLock !== lock) return;
+        screenLock = null;
+        screenStatus(wantsScreenAwake() ? 'Screen lock released by your device.' : '');
+      });
+      screenStatus('Screen stays on while playing');
+    } catch {
+      if (wantsScreenAwake()) screenStatus('Could not keep screen on. Check battery saver or browser settings.');
+    } finally {
+      screenLockPending = false;
+    }
+  }
+  document.addEventListener('visibilitychange', syncScreenLock);
+  window.addEventListener('pageshow', syncScreenLock);
+  window.addEventListener('pagehide', () => {
+    const previous = screenLock;
+    screenLock = null;
+    releaseScreenLock(previous);
+  });
+
   function renderPlayback() {
     const playing = ready && !audio.paused && !audio.ended;
+    syncScreenLock();
     ui["play-label"].textContent = playing ? "Pause" : "Play";
     ui["play-icon"].textContent = playing ? "Ⅱ" : "▶";
     ui.play.setAttribute("aria-label", playing ? "Pause" : "Play");
