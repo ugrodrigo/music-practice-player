@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#111413">
   <link rel="manifest" href="manifest.webmanifest">
@@ -72,7 +72,8 @@
     <aside class="lyrics panel" aria-labelledby="lyrics-heading">
       <div class="lyrics-heading"><button id="lyrics-view" type="button" aria-pressed="true">Lyrics</button><a id="lyrics-genius" target="_blank" rel="noopener noreferrer" hidden>Find on Genius</a><button id="lyrics-find" type="button" aria-pressed="false">Find lyrics</button></div>
       <h2 id="lyrics-heading" class="sr-only">Lyrics</h2>
-      <div class="lyrics-size-controls" aria-label="Lyrics text size"><button id="lyrics-smaller" type="button" aria-label="Smaller lyrics">A-</button><span id="lyrics-size" aria-live="polite">16px</span><button id="lyrics-larger" type="button" aria-label="Larger lyrics">A+</button></div>
+      <div class="lyrics-size-controls" aria-label="Lyrics display"><button id="lyrics-height-toggle" type="button" aria-expanded="false" aria-controls="lyrics-height-controls">Height</button><button id="lyrics-smaller" type="button" aria-label="Smaller lyrics">A-</button><span id="lyrics-size" aria-live="polite">16px</span><button id="lyrics-larger" type="button" aria-label="Larger lyrics">A+</button></div>
+      <div id="lyrics-height-controls" hidden><label for="lyrics-height-slider">Box height <span id="lyrics-height-value">Auto</span></label><input id="lyrics-height-slider" type="range" min="40" max="100" step="5" value="100"><button id="lyrics-height-auto" type="button">Auto</button></div>
       <p id="lyrics-mode" class="lyrics-note">Waiting for lyrics</p>
       <details id="lyrics-settings" open><summary class="sr-only">Find lyrics</summary>
       <label class="lyrics-auto"><input id="lyrics-auto" type="checkbox" checked> Auto-find lyrics</label>
