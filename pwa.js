@@ -74,8 +74,8 @@
   }
   heightSlider.addEventListener('input', () => { heightPercent = Number(heightSlider.value); saveHeight(); });
   document.getElementById('lyrics-height-auto').addEventListener('click', () => { heightPercent = 0; saveHeight(); });
-  document.getElementById('lyrics-height-toggle').addEventListener('click', event => {
-    const controls = document.getElementById('lyrics-height-controls');
+  document.getElementById('lyrics-config-toggle').addEventListener('click', event => {
+    const controls = document.getElementById('lyrics-display-config');
     controls.hidden = !controls.hidden;
     event.currentTarget.setAttribute('aria-expanded', String(!controls.hidden));
   });
