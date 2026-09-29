@@ -287,4 +287,12 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
 #lyrics-config-toggle { min-width: 40px; min-height: 44px; justify-content: center; font-size: 23px; border-radius: 7px; }
 #lyrics-config-toggle[aria-expanded="true"] { color: var(--accent); background: #293423; }
 #lyrics-display-config { padding: 8px 0; border-bottom: 1px solid var(--line); max-height: 45%; overflow-y: auto; flex-shrink: 0; }
-.lyrics[data-view="find"] #lyrics-display-config, .lyrics[data-view="find"] #lyrics-config-toggle { display: none; }
+.lyrics[data-view="find"] #lyrics-display-config { display: none; }
+
+.install-row:has(#update-app[hidden]) { display: none; }
+.lyrics[data-view="config"] > :not(.lyrics-heading):not(#lyrics-heading):not(#lyrics-display-config) { display: none !important; }
+#lyrics-display-config { max-height: none; flex: 1; min-height: 0; flex-shrink: 1; padding-top: 16px; border: 0; }
+.config-heading { margin: 0 0 16px; font-size: 16px; font-weight: 600; }
+#lyrics-display-config .screen-awake-row { justify-content: flex-start; font-size: 13px; padding: 0 0 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+#lyrics-display-config .screen-awake-row label { min-height: 44px; }
+#lyrics-config-toggle svg { display: block; width: 24px; height: 24px; }

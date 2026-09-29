@@ -52,15 +52,20 @@ window.LyricsPanel = (() => {
     return groups.some((entry) => entry.text) ? groups : [];
   }
 
-  function showTab(find) {
-    document.querySelector('.lyrics').dataset.view = find ? 'find' : 'lyrics';
-    $('settings').open = find;
-    $('view').setAttribute('aria-pressed', String(!find));
-    $('find').setAttribute('aria-pressed', String(find));
+  function showTab(selection) {
+    const view = selection === 'config' ? 'config' : selection ? 'find' : 'lyrics';
+    document.querySelector('.lyrics').dataset.view = view;
+    $('settings').open = view === 'find';
+    $('view').setAttribute('aria-pressed', String(view === 'lyrics'));
+    $('find').setAttribute('aria-pressed', String(view === 'find'));
+    $('config-toggle').setAttribute('aria-pressed', String(view === 'config'));
+    $('config-toggle').setAttribute('aria-expanded', String(view === 'config'));
+    $('display-config').hidden = view !== 'config';
     requestAnimationFrame(() => update(playbackTime, playbackDuration, true));
   }
   $('view').addEventListener('click', () => showTab(false));
   $('find').addEventListener('click', () => showTab(true));
+  $('config-toggle').addEventListener('click', () => showTab('config'));
 
   function renderFollowMode() {
     $('mode').textContent = !hasLyrics ? 'Waiting for lyrics' : timedLines.length ? 'Tap or scroll to seek. Use the cue buttons to save.' : 'Approximate scrolling - song %';

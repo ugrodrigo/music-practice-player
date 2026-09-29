@@ -14,7 +14,7 @@ The same app can be installed as a Progressive Web App (PWA). On phones, **Lyric
 
 1. Publish this folder on an HTTPS static host. For this repository, GitHub Pages can serve the `main` branch's root folder: repository **Settings → Pages → Build and deployment → Deploy from a branch → main → / (root)**. See [GitHub's publishing instructions](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site). These local changes must be pushed before the hosted site can include them; implementation does not publish the site automatically.
 2. Open the published URL in Chrome on Android while online. With GitHub Pages enabled for this repository, the expected URL is `https://ugrodrigo.github.io/music-practice-player/`.
-3. Wait for **Ready offline**, then tap **Install app**. If that button is unavailable, use Chrome's menu to install/add the app to your home screen.
+3. Let the initial page finish loading, then tap **Install app**. If that button is unavailable, use Chrome's menu to install/add the app to your home screen.
 4. Open an audio file stored on your phone. Fetch its lyrics once while online if you want them available offline.
 5. You can now reopen the app without internet and select the same local audio file again.
 
@@ -149,3 +149,5 @@ Use the HTTPS site or installed app: plain HTTP phone previews do not support wa
 Browser checks covered automatic height, pinned navigation, font-size persistence after reload, and scroll-to-seek at the 40% following position. Mocked wake-lock checks covered paused practice, automatic recovery after system release, visibility changes, opt-out, delayed requests, rejections, and missing API support. Physical Android screen timeout behavior still needs device testing.
 
 The phone header is fixed edge-to-edge with safe-area padding. Lyric height recalculates on viewport and browser-chrome changes. The gear in the lyrics header opens text-size controls and a box-height slider (40-100% of available space, with a 220px minimum); **Auto** returns to filling the available space. The chosen percentage is saved independently of text size. Browser checks verified full-width header bounds, manual height changes, Auto reset, and a 200px lyric-height change when the viewport grew by 200px.
+
+The solid gear opens a separate Settings view with text size, box height, and Keep screen on. Lyrics are hidden while Settings is open; tap Lyrics to return. The header no longer displays offline-status text; update notifications remain available.
