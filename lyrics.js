@@ -68,7 +68,8 @@ window.LyricsPanel = (() => {
   $('config-toggle').addEventListener('click', () => showTab('config'));
 
   function renderFollowMode() {
-    $('mode').textContent = !hasLyrics ? 'Waiting for lyrics' : timedLines.length ? 'Tap or scroll to seek. Use the cue buttons to save.' : 'Approximate scrolling - song %';
+    $('mode').hidden = hasLyrics && timedLines.length > 0;
+    $('mode').textContent = !hasLyrics ? 'Waiting for lyrics' : timedLines.length ? '' : 'Approximate scrolling - song %';
   }
 
   function update(time, total, force = false) {
