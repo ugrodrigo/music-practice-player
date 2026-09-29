@@ -49,6 +49,7 @@
   for (const panel of ['cues', 'lyrics']) {
     document.getElementById(`show-${panel}`).addEventListener('click', () => {
       document.body.dataset.mobilePanel = panel;
+      requestAnimationFrame(updateLayout);
       for (const name of ['cues', 'lyrics']) document.getElementById(`show-${name}`).setAttribute('aria-pressed', String(name === panel));
     });
   }
@@ -60,12 +61,24 @@
     event.currentTarget.textContent = expanded ? 'Hide waveform' : 'Show waveform';
   });
 
-  const layoutObserver = new ResizeObserver(() => {
-    document.documentElement.style.setProperty('--dock-height', `${document.getElementById('playback-dock').getBoundingClientRect().height}px`);
-    const content = document.querySelector('.practice-content');
-    document.documentElement.style.setProperty('--lyrics-top', `${content.getBoundingClientRect().top + window.scrollY}px`);
-  });
-  for (const selector of ['#playback-dock', '.app-header', '.install-row', '.mobile-panels']) layoutObserver.observe(document.querySelector(selector));
+  function updateLayout() {
+    const dock = document.getElementById('playback-dock').getBoundingClientRect();
+    const header = document.querySelector('.sticky-header').getBoundingClientRect();
+    const lyrics = document.querySelector('.lyrics');
+    const root = document.documentElement;
+    root.style.setProperty('--dock-height', `${dock.height}px`);
+    root.style.setProperty('--header-height', `${header.height}px`);
+    if (lyrics.getClientRects().length) {
+      const viewportBottom = window.visualViewport ? visualViewport.offsetTop + visualViewport.height : innerHeight;
+      const bottom = matchMedia('(max-width: 760px)').matches ? Math.min(dock.top, viewportBottom) : viewportBottom;
+      root.style.setProperty('--lyrics-height', `${Math.max(180, bottom - lyrics.getBoundingClientRect().top - 10)}px`);
+    }
+  }
+  const layoutObserver = new ResizeObserver(updateLayout);
+  for (const selector of ['#playback-dock', '.sticky-header', '.install-row']) layoutObserver.observe(document.querySelector(selector));
+  window.addEventListener('resize', updateLayout);
+  window.visualViewport?.addEventListener('resize', updateLayout);
+  requestAnimationFrame(updateLayout);
 
   if (location.protocol === 'file:') {
     status.textContent = 'Local file mode · open the HTTPS website on Android to install';

@@ -16,12 +16,14 @@
 </head>
 <body data-waveform-expanded="true">
   <main class="workspace">
+    <div class="sticky-header">
     <header class="app-header">
       <div class="brand"><span class="brand-mark" aria-hidden="true">♫</span><div><p class="eyebrow">YOUR PERSONAL PRACTICE SPACE</p><h1>Music Practice Player</h1></div></div>
       <span class="local-badge"><span aria-hidden="true">●</span> Local audio. Just you.</span>
       <button id="install-app" class="button button-outline" type="button" hidden>Install app</button>
     </header>
     <nav class="mobile-panels" aria-label="Practice panel"><button id="show-lyrics" type="button" aria-pressed="true">Lyrics</button><button id="show-cues" type="button" aria-pressed="false">Cues</button><button id="mobile-open-file" class="button button-outline" type="button">Open audio file</button></nav>
+    </div>
     <div class="install-row"><span id="offline-status" role="status">Local audio stays on your device.</span><button id="update-app" class="button button-outline" type="button" hidden>Update &amp; reload</button></div>
 
     <div class="practice-content">
@@ -45,7 +47,7 @@
         <div id="cue-pages" hidden><button id="cue-page-prev" type="button" aria-label="Previous cue page">Previous</button><span id="cue-page-label">1-8</span><button id="cue-page-next" type="button" aria-label="Next cue page">Next</button></div>
         <p id="cue-feedback" class="sr-only" role="status"></p>
       </div>
-      <p id="screen-awake-status" role="status" hidden></p>
+      <div class="screen-awake-row"><label><input id="keep-screen-awake" type="checkbox" checked> Keep screen on</label><button id="screen-awake-status" type="button" aria-live="polite" hidden></button></div>
       <div class="clock-row"><span id="current-time" class="clock" aria-label="Current playback time">00:00.0</span><span class="duration">/ <span id="duration">00:00.0</span></span></div>
       <input id="seek" class="seek" type="range" min="0" max="0" step="0.01" value="0" disabled aria-valuetext="00:00.0">
       <div class="transport-row">
@@ -70,6 +72,7 @@
     <aside class="lyrics panel" aria-labelledby="lyrics-heading">
       <div class="lyrics-heading"><button id="lyrics-view" type="button" aria-pressed="true">Lyrics</button><a id="lyrics-genius" target="_blank" rel="noopener noreferrer" hidden>Find on Genius</a><button id="lyrics-find" type="button" aria-pressed="false">Find lyrics</button></div>
       <h2 id="lyrics-heading" class="sr-only">Lyrics</h2>
+      <div class="lyrics-size-controls" aria-label="Lyrics text size"><button id="lyrics-smaller" type="button" aria-label="Smaller lyrics">A-</button><span id="lyrics-size" aria-live="polite">16px</span><button id="lyrics-larger" type="button" aria-label="Larger lyrics">A+</button></div>
       <p id="lyrics-mode" class="lyrics-note">Waiting for lyrics</p>
       <details id="lyrics-settings" open><summary class="sr-only">Find lyrics</summary>
       <label class="lyrics-auto"><input id="lyrics-auto" type="checkbox" checked> Auto-find lyrics</label>

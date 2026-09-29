@@ -8,6 +8,23 @@ window.LyricsPanel = (() => {
   let fileKey = '', duration = 0, album = '', revision = 0, controller;
   let queue = Promise.resolve(), nextRequest = 0, blockedUntil = 0;
   let timedLines = [], lineNodes = [], activeLine = -1;
+  let lyricSize = 16;
+  try { const saved = Number(localStorage.getItem('music-practice-player:lyrics:size')); if (saved >= 14 && saved <= 26) lyricSize = saved; } catch {}
+  function renderSize() {
+    $('text').style.fontSize = `${lyricSize}px`;
+    $('size').textContent = `${lyricSize}px`;
+    $('smaller').disabled = lyricSize <= 14;
+    $('larger').disabled = lyricSize >= 26;
+  }
+  for (const [id, delta] of [['smaller', -2], ['larger', 2]]) {
+    $(id).addEventListener('click', () => {
+      lyricSize = Math.max(14, Math.min(26, lyricSize + delta));
+      renderSize();
+      try { localStorage.setItem('music-practice-player:lyrics:size', String(lyricSize)); } catch {}
+      update(playbackTime, playbackDuration, true);
+    });
+  }
+  renderSize();
   let scrubbing = false, scrubTimer = 0;
   let playbackTime = 0, playbackDuration = 0, hasLyrics = false;
 
@@ -46,7 +63,7 @@ window.LyricsPanel = (() => {
   $('find').addEventListener('click', () => showTab(true));
 
   function renderFollowMode() {
-    $('mode').textContent = !hasLyrics ? 'Waiting for lyrics' : timedLines.length ? 'Scroll to seek. Tap or scroll to seek. Use the cue buttons to save.' : 'Approximate scrolling - song %';
+    $('mode').textContent = !hasLyrics ? 'Waiting for lyrics' : timedLines.length ? 'Tap or scroll to seek. Use the cue buttons to save.' : 'Approximate scrolling - song %';
   }
 
   function update(time, total, force = false) {
@@ -77,7 +94,7 @@ window.LyricsPanel = (() => {
     if (timedLines.length) {
       if (!changed && !force) return;
       const line = lineNodes[activeLine];
-      panel.scrollTop = line ? Math.max(0, line.offsetTop - (panel.clientHeight - line.offsetHeight) / 2) : 0;
+      panel.scrollTop = line ? Math.max(0, line.offsetTop + line.offsetHeight / 2 - panel.clientHeight * .4) : 0;
     } else if (playbackDuration > 0) {
       panel.scrollTop = Math.min(1, playbackTime / playbackDuration) * Math.max(0, panel.scrollHeight - panel.clientHeight);
     }
@@ -374,7 +391,7 @@ window.LyricsPanel = (() => {
     const panel = $('text');
     let time;
     if (timedLines.length) {
-      const center = panel.scrollTop + panel.clientHeight / 2;
+      const center = panel.scrollTop + panel.clientHeight * .4;
       let nearest = 0;
       for (let i = 1; i < lineNodes.length; i++) {
         if (Math.abs(lineNodes[i].offsetTop + lineNodes[i].offsetHeight / 2 - center) < Math.abs(lineNodes[nearest].offsetTop + lineNodes[nearest].offsetHeight / 2 - center)) nearest = i;
@@ -389,7 +406,7 @@ window.LyricsPanel = (() => {
     scrubTimer = setTimeout(finishScrub, 180);
   }, { passive: true });
   new ResizeObserver(() => {
-    $('text').style.setProperty('--lyric-edge', `${Math.max(0, $('text').clientHeight / 2 - 22)}px`);
+    $('text').style.setProperty('--lyric-edge', `${Math.max(0, $('text').clientHeight * .6 - 22)}px`);
     update(playbackTime, playbackDuration, true);
   }).observe($('text'));
   renderFollowMode();

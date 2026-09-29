@@ -246,15 +246,27 @@
     if (ready && !audio.paused && !audio.ended) frame = requestAnimationFrame(tick);
   }
 
-  let screenLock = null, screenLockPending = false;
-  const wantsScreenAwake = () => ready && audio && !audio.paused && !audio.ended && document.visibilityState === 'visible';
+  let screenLock = null, screenLockPending = false, wakeRetryTimer = 0, wakeRetries = 0;
+  const wantsScreenAwake = () => ready && audio && $('keep-screen-awake').checked && document.visibilityState === 'visible';
   const screenStatus = message => {
     $('screen-awake-status').textContent = message;
     $('screen-awake-status').hidden = !message;
   };
   const releaseScreenLock = lock => { if (lock) lock.release().catch(() => {}); };
+  function retryScreenLock() {
+    clearTimeout(wakeRetryTimer);
+    if (!wantsScreenAwake() || wakeRetries >= 3) return;
+    wakeRetries++;
+    wakeRetryTimer = setTimeout(() => syncScreenLock(), wakeRetries * 1500);
+  }
+  function refreshScreenLock() {
+    wakeRetries = 0;
+    clearTimeout(wakeRetryTimer);
+    syncScreenLock();
+  }
   async function syncScreenLock() {
     if (!wantsScreenAwake()) {
+      clearTimeout(wakeRetryTimer);
       const previous = screenLock;
       screenLock = null;
       releaseScreenLock(previous);
@@ -262,7 +274,7 @@
       return;
     }
     if (!window.isSecureContext || !navigator.wakeLock) {
-      screenStatus('Keep screen on unavailable in this browser or connection.');
+      screenStatus(!window.isSecureContext ? 'Use the HTTPS site to keep the screen on.' : 'Screen wake lock unavailable in this browser.');
       return;
     }
     if (screenLock || screenLockPending) return;
@@ -270,22 +282,28 @@
     try {
       const lock = await navigator.wakeLock.request('screen');
       if (!wantsScreenAwake()) { releaseScreenLock(lock); return; }
+      if (lock.released) { retryScreenLock(); return; }
       screenLock = lock;
       lock.addEventListener('release', () => {
         if (screenLock !== lock) return;
         screenLock = null;
-        screenStatus(wantsScreenAwake() ? 'Screen lock released by your device.' : '');
+        screenStatus(wantsScreenAwake() ? 'Screen lock released. Tap to retry.' : '');
+        retryScreenLock();
       });
-      screenStatus('Screen stays on while playing');
+      screenStatus('Screen lock active');
     } catch {
-      if (wantsScreenAwake()) screenStatus('Could not keep screen on. Check battery saver or browser settings.');
+      if (wantsScreenAwake()) { screenStatus('Screen lock blocked. Tap to retry.'); retryScreenLock(); }
     } finally {
       screenLockPending = false;
     }
   }
-  document.addEventListener('visibilitychange', syncScreenLock);
-  window.addEventListener('pageshow', syncScreenLock);
+  document.addEventListener('visibilitychange', refreshScreenLock);
+  $('keep-screen-awake').addEventListener('change', refreshScreenLock);
+  $('screen-awake-status').addEventListener('click', refreshScreenLock);
+  document.addEventListener('pointerdown', () => { if (!screenLock && !screenLockPending && wantsScreenAwake()) refreshScreenLock(); }, { passive: true });
+  window.addEventListener('pageshow', refreshScreenLock);
   window.addEventListener('pagehide', () => {
+    clearTimeout(wakeRetryTimer);
     const previous = screenLock;
     screenLock = null;
     releaseScreenLock(previous);
