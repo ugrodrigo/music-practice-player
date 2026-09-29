@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="lyrics.js" defer></script>
   <script src="waveform.js" defer></script>
+  <script src="audio-store.js" defer></script>
   <script src="app.js" defer></script>
   <script src="pwa.js" defer></script>
 </head>
@@ -73,6 +74,7 @@
       <h2 id="lyrics-heading" class="sr-only">Lyrics</h2>
       <div id="lyrics-display-config" hidden>
       <h3 class="config-heading">Settings</h3>
+      <div class="audio-memory"><label><input id="remember-audio" type="checkbox" checked> Remember last audio on this device</label><button id="forget-audio" type="button">Remove saved audio</button><p id="audio-memory-status" role="status"></p></div>
       <div class="screen-awake-row"><label><input id="keep-screen-awake" type="checkbox" checked> Keep screen on</label><button id="screen-awake-status" type="button" aria-live="polite" hidden></button></div>
       <div class="lyrics-size-controls" aria-label="Lyrics display"><span class="lyrics-size-label">Text size</span><button id="lyrics-smaller" type="button" aria-label="Smaller lyrics">A-</button><span id="lyrics-size" aria-live="polite">16px</span><button id="lyrics-larger" type="button" aria-label="Larger lyrics">A+</button></div>
       <div id="lyrics-height-controls"><label for="lyrics-height-slider">Box height <span id="lyrics-height-value">Auto</span></label><input id="lyrics-height-slider" type="range" min="40" max="100" step="5" value="100"><button id="lyrics-height-auto" type="button">Auto</button></div>

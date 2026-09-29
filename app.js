@@ -12,6 +12,7 @@
   let audio = null;
   let objectURL = null;
   let filename = "";
+  let activeFile = null, memoryRevision = 0;
   let ready = false;
   let cues = Array(8).fill(null);
   let frame = 0;
@@ -355,12 +356,40 @@
     ui.speed.value = String(value);
   }
 
-  function loadFile(file) {
+  const rememberAudio = $('remember-audio');
+  try { rememberAudio.checked = localStorage.getItem('music-practice-player:remember-audio') !== 'false'; } catch {}
+  function memoryStatus(message) { $('audio-memory-status').textContent = message; }
+  function saveLastAudio(file) {
+    if (!rememberAudio.checked) return;
+    const version = ++memoryRevision;
+    memoryStatus('Saving audio on this device...');
+    window.LastAudio.save(file).then(() => {
+      if (version === memoryRevision) memoryStatus('Last audio saved on this device.');
+    }).catch(() => {
+      if (version === memoryRevision) memoryStatus('Could not save audio. Check available device storage; playback still works.');
+    });
+  }
+  function forgetLastAudio() {
+    const version = ++memoryRevision;
+    window.LastAudio.clear().then(() => {
+      if (version === memoryRevision) memoryStatus('Saved audio removed. The current song stays open.');
+    }).catch(() => { if (version === memoryRevision) memoryStatus('Could not remove saved audio.'); });
+  }
+  rememberAudio.addEventListener('change', () => {
+    try { localStorage.setItem('music-practice-player:remember-audio', String(rememberAudio.checked)); } catch {}
+    if (!rememberAudio.checked) forgetLastAudio();
+    else if (activeFile && ready) saveLastAudio(activeFile);
+  });
+  $('forget-audio').addEventListener('click', forgetLastAudio);
+
+  function loadFile(file, restored = false) {
     if (!file) return;
     if (!file.type.startsWith("audio/") && !/\.(mp3|wav|m4a|aac|ogg|oga|flac|opus|aiff?|weba)$/i.test(file.name)) {
       announce("Choose an audio file, such as MP3, WAV, or M4A.", true);
       return;
     }
+    activeFile = file;
+    memoryRevision++;
     const previous = audio;
     const current = new Audio();
     audio = current; // Events and play promises from a replaced file must not update this track.
@@ -399,6 +428,7 @@
       ui.seek.max = String(current.duration);
       restoreCues();
       setReady(true);
+      if (!restored) saveLastAudio(file);
       window.LyricsPanel.load(file, current.duration);
       window.Waveform.load(file, current.duration);
       const count = cues.filter(Boolean).length;
@@ -492,6 +522,15 @@
     hideDrop();
     loadFile(event.dataTransfer.files[0]);
   });
+  if (rememberAudio.checked) {
+    const restoreVersion = memoryRevision;
+    window.LastAudio.read().then(file => {
+      if (file && !audio && rememberAudio.checked && restoreVersion === memoryRevision) {
+        loadFile(file, true);
+        memoryStatus('Last audio restored from this device.');
+      }
+    }).catch(() => { if (!audio) memoryStatus('Saved audio is unavailable. Open a file to continue.'); });
+  }
   window.addEventListener("blur", hideDrop);
   document.addEventListener("dragend", hideDrop);
 })();

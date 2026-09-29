@@ -16,9 +16,9 @@ The same app can be installed as a Progressive Web App (PWA). On phones, **Lyric
 2. Open the published URL in Chrome on Android while online. With GitHub Pages enabled for this repository, the expected URL is `https://ugrodrigo.github.io/music-practice-player/`.
 3. Let the initial page finish loading, then tap **Install app**. If that button is unavailable, use Chrome's menu to install/add the app to your home screen.
 4. Open an audio file stored on your phone. Fetch its lyrics once while online if you want them available offline.
-5. You can now reopen the app without internet and select the same local audio file again.
+5. You can now reopen the app without internet; the last saved audio file restores automatically, paused.
 
-Playback, speed controls, cues, waveform analysis, and previously cached lyrics work offline. New lyrics searches and Genius require internet. Audio is never uploaded or copied into the app cache; select it again after reopening. Cloud-only files need to be downloaded to the phone first. The lyrics cache retains the last ten selected records.
+Playback, speed controls, cues, waveform analysis, and previously cached lyrics work offline. New lyrics searches and Genius require internet. Audio is never uploaded. With **Remember last audio on this device** enabled (the default), one local copy is stored in IndexedDB and restored automatically after reopening. Cloud-only files need to be downloaded to the phone first. The lyrics cache retains the last ten selected records.
 
 Saved cues and lyrics belong to this browser and site address. They do not automatically transfer from the desktop app or a `file://` page. Clearing site data removes them and the offline app cache. Background/lock-screen playback and installation still need verification on a physical Android phone.
 
@@ -79,7 +79,7 @@ Uncheck **Auto-find lyrics** to stop automatic online searches; this preference 
 
 ## Cue persistence
 
-Cue timestamps and names save to this browser's `localStorage`, associated with the exact filename. Reload the page and select the same filename to restore them. Audio files themselves are never stored, and must be selected again each session.
+Cue timestamps and names save to this browser's `localStorage`, associated with the exact filename. The last saved audio restores automatically, together with its cues. Other files restore their cues when selected again.
 
 Two files with identical names share the same cue record. Cues beyond a loaded file's duration are ignored. Clearing browser storage removes saved cues. Storage is browser/profile-specific; private browsing, browser settings, or moving the app folder may affect persistence for local `file://` pages. If storage cannot be read or written, the app shows a message and playback remains available.
 
@@ -151,3 +151,5 @@ Browser checks covered automatic height, pinned navigation, font-size persistenc
 The phone header is fixed edge-to-edge with safe-area padding. Lyric height recalculates on viewport and browser-chrome changes. The gear in the lyrics header opens text-size controls and a box-height slider (40-100% of available space, with a 220px minimum); **Auto** returns to filling the available space. The chosen percentage is saved independently of text size. Browser checks verified full-width header bounds, manual height changes, Auto reset, and a 200px lyric-height change when the viewport grew by 200px.
 
 The solid gear opens a separate Settings view with text size, box height, and Keep screen on. Lyrics are hidden while Settings is open; tap Lyrics to return. The header no longer displays offline-status text; update notifications remain available.
+
+In Settings, **Remember last audio on this device** controls local audio persistence. **Remove saved audio** deletes the stored copy without stopping the current song. Only the latest successfully loaded audio is retained, preserving its filename, type, and modification time so cached lyrics still match. Storage failures do not interrupt playback. Clearing site data or browser eviction can remove the copy. After installing this update, open a song once to save it. Offline browser tests passed automatic restoration without the picker, paused playback state, cue restoration, preserved file identity, quota failure, deletion, and persistent opt-out.

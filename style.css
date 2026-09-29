@@ -296,3 +296,8 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
 #lyrics-display-config .screen-awake-row { justify-content: flex-start; font-size: 13px; padding: 0 0 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
 #lyrics-display-config .screen-awake-row label { min-height: 44px; }
 #lyrics-config-toggle svg { display: block; width: 24px; height: 24px; }
+
+.audio-memory { display: grid; gap: 8px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line); font-size: 12px; }
+.audio-memory label { display: flex; align-items: center; gap: 6px; min-height: 44px; }
+.audio-memory button { justify-self: start; padding: 8px; min-height: 36px; border: 1px solid var(--line); border-radius: 6px; background: #252d26; }
+#audio-memory-status { font-size: 11px; color: var(--muted); }
