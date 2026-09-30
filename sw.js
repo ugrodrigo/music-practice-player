@@ -1,10 +1,10 @@
 "use strict";
 
 // Bump this version whenever any cached application file changes.
-const VERSION = 'v21';
+const VERSION = 'v22';
 const PREFIX = `music-practice-player:${self.registration.scope}:`;
 const CACHE = PREFIX + VERSION;
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'audio-store.js', 'recording-folder.js', 'lyrics.js', 'waveform.js', 'pwa.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
+const FILES = ['./', 'index.html', 'style.css', 'app.js', 'audio-store.js', 'recording-folder.js', 'looper-store.js', 'looper.js', 'lyrics.js', 'waveform.js', 'pwa.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 const URLS = FILES.map((file) => new URL(file, self.registration.scope).href);
 
 self.addEventListener('install', (event) => {

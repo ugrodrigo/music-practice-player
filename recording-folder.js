@@ -119,11 +119,11 @@
     message('Download requested. The pending copy is kept until a folder save succeeds.');
   });
   render();
-  (async () => {
+  const initialized = (async () => {
     try {
       folder = await storage('readonly', store => store.get('folder')) || null;
       pending = await storage('readonly', store => store.get('pending')) || null;
-      if (!supported) message('Folder saving is unavailable in this browser. Try opening this HTTPS app in Chrome.');
+      if (!supported) message('Folder saving is unavailable in this browser. Looper recordings still save inside the app; use Download WAV for an external copy.');
       else if (pending) message('A test file is waiting to be saved. Retry or download it.');
       else if (folder) {
         const state = await folder.queryPermission({ mode: 'readwrite' });
@@ -132,4 +132,38 @@
     } catch { message('Could not restore folder settings. Choose a folder to try again.'); }
     finally { busy = false; render(); }
   })();
+  window.RecordingFolder = {
+    ready: initialized,
+    get supported() { return supported; },
+    get name() { return folder?.name || ''; },
+    async authorize() { await initialized; await permission(); },
+    async write(name, blob, replace = false) {
+      await initialized;
+      if (!folder) throw new Error('No folder selected. Recording kept inside the app.');
+      const target = folder;
+      if (await target.queryPermission({ mode: 'readwrite' }) !== 'granted') throw new Error('Folder permission required. Tap Save to folder.');
+      let handle, created = false;
+      try {
+        handle = await target.getFileHandle(name);
+        if (!replace) {
+          const old = await handle.getFile();
+          if (old.size === blob.size) {
+            const a = new Uint8Array(await old.arrayBuffer()), b = new Uint8Array(await blob.arrayBuffer());
+            if (a.every((value, i) => value === b[i])) return;
+          }
+          throw new Error('A different file already exists with this name.');
+        }
+      } catch (error) {
+        if (error.name !== 'NotFoundError') throw error;
+        handle = await target.getFileHandle(name, { create: true }); created = true;
+      }
+      let stream;
+      try { stream = await handle.createWritable(); await stream.write(blob); await stream.close(); }
+      catch (error) {
+        try { await stream?.abort(); } catch {}
+        if (created) { try { await target.removeEntry(name); } catch {} }
+        throw error;
+      }
+    }
+  };
 })();

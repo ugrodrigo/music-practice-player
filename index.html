@@ -14,9 +14,11 @@
   <script src="audio-store.js" defer></script>
   <script src="app.js" defer></script>
   <script src="recording-folder.js" defer></script>
+  <script src="looper-store.js" defer></script>
+  <script src="looper.js" defer></script>
   <script src="pwa.js" defer></script>
 </head>
-<body data-waveform-expanded="true">
+<body data-waveform-expanded="true" data-app-mode="practice">
   <main class="workspace">
     <div class="sticky-header">
     <header class="app-header">
@@ -24,6 +26,7 @@
       <span class="local-badge"><span aria-hidden="true">●</span> Local audio. Just you.</span>
       <button id="install-app" class="button button-outline" type="button" hidden>Install app</button>
     </header>
+    <nav class="app-modes" aria-label="App mode"><button id="mode-practice" type="button" aria-pressed="true">Practice</button><button id="mode-looper" type="button" aria-pressed="false">Looper</button></nav>
     <nav class="mobile-panels" aria-label="Practice panel"><button id="show-lyrics" type="button" aria-pressed="true">Lyrics</button><button id="show-cues" type="button" aria-pressed="false">Cues</button><button id="mobile-open-file" class="button button-outline" type="button">Open audio file</button></nav>
     </div>
     <div class="install-row"><span id="offline-status" hidden>Local audio stays on your device.</span><button id="update-app" class="button button-outline" type="button" hidden>Update &amp; reload</button></div>
@@ -77,7 +80,7 @@
       <h3 class="config-heading">Settings</h3>
       <section class="recording-folder" aria-labelledby="recording-heading">
         <h4 id="recording-heading">Recording folder</h4>
-        <p>Test folder saving before using the looper. The test creates a one-second silent WAV file; it does not use the microphone.</p>
+        <p>Choose a folder for automatic recording copies. Save test WAV checks access with a one-second silent file.</p>
         <p id="recording-name">No folder selected</p>
         <div class="recording-actions"><button id="recording-choose" type="button" disabled>Choose folder</button><button id="recording-test" type="button" disabled>Save test WAV</button><button id="recording-retry" type="button" hidden>Retry save</button><button id="recording-download" type="button" hidden>Download pending file</button><button id="recording-disconnect" type="button" disabled>Disconnect folder</button></div>
         <p id="recording-status" role="status">Checking folder access...</p>
@@ -103,6 +106,24 @@
       <div id="lyrics-text" class="lyrics-text" tabindex="0" aria-label="Song lyrics" hidden></div>
     </aside>
     </div>
+
+    <section id="looper-panel" class="panel" aria-labelledby="looper-heading" hidden>
+      <div class="looper-heading"><h2 id="looper-heading">Looper</h2><button id="looper-saved" type="button">Saved recordings</button></div>
+      <label for="looper-name">Recording name</label><input id="looper-name" type="text" maxlength="100" placeholder="Record a new loop" disabled>
+      <div class="looper-meter-row"><span id="looper-clock">00:00.0</span><label>Input <meter id="looper-meter" min="0" max="1" value="0">0</meter></label></div>
+      <p id="looper-status" role="status" aria-live="polite">Record a phrase, then adjust the start and end markers.</p>
+      <div class="looper-wave-tools"><label>Zoom <select id="looper-zoom" disabled><option value="1">Full recording</option><option value="2">2x</option><option value="4">4x</option><option value="8">8x</option><option value="16">16x</option></select></label><span id="looper-window"></span></div>
+      <canvas id="looper-waveform" height="220" role="img" aria-label="Recording waveform. Drag the start and end markers, or use the time controls below."></canvas>
+      <label class="looper-pan-label">Waveform position<input id="looper-pan" type="range" min="0" max="0" step="0.001" value="0" disabled></label>
+      <div class="looper-boundaries"><label><button id="looper-select-start" type="button" aria-pressed="true">Start</button><input id="looper-start" type="number" min="0" step="0.001" value="0" aria-label="Loop start in seconds" disabled></label><label><button id="looper-select-end" type="button" aria-pressed="false">End</button><input id="looper-end" type="number" min="0" step="0.001" value="0" aria-label="Loop end in seconds" disabled></label></div>
+      <div class="looper-fine"><button id="looper-earlier" type="button" disabled aria-label="Move selected marker earlier">-</button><label>Step <select id="looper-step"><option value="0.001">1 ms</option><option value="0.01" selected>10 ms</option><option value="0.1">100 ms</option></select></label><button id="looper-later" type="button" disabled aria-label="Move selected marker later">+</button><button id="looper-seam" type="button" disabled>Preview seam</button></div>
+      <div class="looper-transport"><button id="looper-record" type="button">Record new</button><button id="looper-play" type="button" disabled>Play loop</button><button id="looper-stop" type="button" disabled>Stop</button></div>
+      <p class="looper-help">One recording, up to 3 minutes. No live microphone monitoring. Keep this app open while recording.</p>
+      <div class="looper-file-actions"><button id="looper-export-loop" type="button" disabled>Download loop WAV</button><button id="looper-export-full" type="button" disabled>Download original WAV</button><button id="looper-folder" type="button">Choose folder</button><button id="looper-folder-save" type="button" disabled>Save to folder</button></div>
+      <p id="looper-folder-status" role="status"></p>
+      <p id="looper-save-status" role="status"></p>
+    </section>
+    <dialog id="looper-library"><div class="looper-heading"><h2>Saved recordings</h2><button id="looper-library-close" type="button">Close</button></div><p id="looper-library-status" role="status"></p><div id="looper-library-list"></div></dialog>
 
     <footer class="shortcuts panel" aria-label="Keyboard shortcuts">
       <p class="eyebrow">KEEP YOUR HANDS ON THE MUSIC</p>

@@ -248,7 +248,9 @@
   }
 
   let screenLock = null, screenLockPending = false, wakeRetryTimer = 0, wakeRetries = 0;
-  const wantsScreenAwake = () => ready && audio && $('keep-screen-awake').checked && document.visibilityState === 'visible';
+  document.addEventListener('practicepause', () => audio?.pause());
+  document.addEventListener('looperactivity', () => syncScreenLock());
+  const wantsScreenAwake = () => (document.body.dataset.appMode === 'looper' ? window.looperActive : ready && audio) && $('keep-screen-awake').checked && document.visibilityState === 'visible';
   const screenStatus = message => {
     $('screen-awake-status').textContent = message;
     $('screen-awake-status').hidden = !message;
@@ -468,6 +470,7 @@
   ui.speed.addEventListener("change", () => changeSpeed(Number(ui.speed.value)));
 
   document.addEventListener("keydown", (event) => {
+    if (document.body.dataset.appMode === 'looper') return;
     const target = event.target;
     if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey ||
       target.closest('input:not([type="range"]), textarea, [contenteditable]:not([contenteditable="false"])')) return;
@@ -503,6 +506,7 @@
   document.addEventListener("dragenter", (event) => {
     if (!isFileDrag(event)) return;
     event.preventDefault();
+    if (document.body.dataset.appMode === 'looper') return;
     dragDepth++;
     ui["drop-overlay"].hidden = false;
   });
@@ -520,7 +524,7 @@
     if (!isFileDrag(event)) return;
     event.preventDefault();
     hideDrop();
-    loadFile(event.dataTransfer.files[0]);
+    if (document.body.dataset.appMode !== 'looper') loadFile(event.dataTransfer.files[0]);
   });
   if (rememberAudio.checked) {
     const restoreVersion = memoryRevision;

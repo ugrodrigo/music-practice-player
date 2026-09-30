@@ -154,15 +154,24 @@ The solid gear opens a separate Settings view with text size, box height, and Ke
 
 In Settings, **Remember last audio on this device** controls local audio persistence. **Remove saved audio** deletes the stored copy without stopping the current song. Only the latest successfully loaded audio is retained, preserving its filename, type, and modification time so cached lyrics still match. Storage failures do not interrupt playback. Clearing site data or browser eviction can remove the copy. After installing this update, open a song once to save it. Offline browser tests passed automatic restoration without the picker, paused playback state, cue restoration, preserved file identity, quota failure, deletion, and persistent opt-out.
 
-## Recording folder prototype
+## Recorder / Looper
 
-Branch: `feature/looper-folder-storage`. This first step validates folder access before implementing microphone recording or the looper. It adds **Settings ? Recording folder** without changing the practice workflow.
+Branch: `feature/looper-folder-storage`. Use the new **Practice / Looper** buttons in the header. Practice retains the existing lyrics, cues and player; entering Looper pauses the practice track.
 
-1. Open an HTTPS preview of this branch in the target phone browser. A plain HTTP LAN preview cannot test directory access.
-2. Choose **Choose folder** and grant read/write access to a dedicated folder.
-3. Choose **Save test WAV**. The app creates a one-second silent WAV named `recording-test_YYYY-MM-DD_HH-mm-ss-SSS_<unique-id>.wav`, using local time. It does not record the microphone.
-4. Verify the file in the phone's file manager, then close/reopen the PWA. The folder should be remembered. Choose **Save test WAV** again; the browser may ask to renew permission.
+In **Looper**:
 
-The app persists a pending test file before attempting the folder write and reports success only after the write closes. A failed save offers retry or download. Pending files survive reload; disconnecting a folder never deletes its files. Existing files with different contents are never overwritten. An unavailable directory picker produces an explicit compatibility message. Downloads are a fallback, not confirmation that a chosen folder was written.
+1. Tap **Record new**, allow microphone access, play a phrase, then tap **Stop**. This first version records one layer, up to 3 minutes, with an input meter and no live microphone monitoring.
+2. Drag the waveform's start/end markers. Select **Start** or **End**, zoom and pan, then use the +/- controls with 1, 10 or 100 ms steps for fine adjustments. The numeric fields use seconds.
+3. **Play loop** repeats the selection. **Preview seam** plays across the end-to-start transition. Playback and loop exports apply a 3 ms edge fade to reduce clicks.
+4. Rename the take if desired. Audio and loop boundaries save automatically in IndexedDB. **Saved recordings** reopens or deletes takes; deleting inside the app preserves external files.
+5. **Download loop WAV** exports the trimmed selection; **Download original WAV** exports the full take. Names are English and contain a UTC timestamp and unique suffix, e.g. `recording_2026-09-30T14-25-30-123Z_a1b2c3d4_loop.wav`.
 
-Automated Edge checks used real File System Access handles in a browser-private test directory, substituting that handle for the system picker. They verified WAV bytes, English timestamp filenames, distinct files, stored-handle restoration, simulated disk-full failure, pending recovery after reload, disconnect, and picker cancellation. They do not establish Android/Brave system-picker compatibility or persistent OS permission; those require the phone workflow above. Existing playback, offline audio restoration, layout, and service-worker update checks also passed.
+**Choose folder** is optional and depends on browser support. When supported and authorized, completed recordings are automatically copied there as full WAV files with JSON sidecars containing the name and loop boundaries. Edits update the sidecar. Permission or disk failures leave the local take intact; reopen it and use **Save to folder** to retry. Existing audio files with different contents are not overwritten. Settings also provides a silent **Save test WAV** to check folder access. Without folder support, recording and local saving still work, with WAV downloads for external copies.
+
+Microphone access requires HTTPS or localhost. After the app is cached, recording, editing, playback and local saving work offline. Leaving the app stops capture and attempts to save the captured audio; stay in the app during a take. **Keep screen on** also applies in Looper, subject to browser/OS permission. New recording and mode switching are protected while capture is finishing. Storage failures keep the take available for download and warn before replacement.
+
+Local browser storage is not a permanent backup: clearing site data or browser eviction can remove recordings. Keep folder copies or WAV downloads for recordings you want to retain. This version has no overdubbing or background recording.
+
+### Looper verification
+
+Run `python tests/looper_smoke.py` on Windows with Microsoft Edge installed. The test uses an isolated temporary profile and a simulated microphone. It checks actual MediaRecorder capture and decoding, trims, looping, WAV contents, automatic folder copies using browser-private handles, offline library restoration, permission denial, cancelled requests, storage failure recovery, deletion, and layouts from 320 to 1366 pixels. Physical Android microphone quality, latency, directory access and OS wake-lock behavior still need device testing. Existing practice-player, lyrics, cues, audio-memory and PWA-update regression checks also passed.

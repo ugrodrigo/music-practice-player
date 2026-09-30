@@ -42,6 +42,7 @@
   window.addEventListener('appinstalled', () => { installPrompt = null; install.hidden = true; });
   update.addEventListener('click', () => {
     if (!registration?.waiting) return;
+    if (window.looperBusy) { document.getElementById('looper-status').textContent = 'Stop recording and wait for saving before updating.'; return; }
     reloadForUpdate = true;
     registration.waiting.postMessage({ type: 'ACTIVATE_UPDATE' });
   });
@@ -98,6 +99,7 @@
   }
   const layoutObserver = new ResizeObserver(scheduleLayout);
   for (const selector of ['#playback-dock', '.sticky-header', '.install-row']) layoutObserver.observe(document.querySelector(selector));
+  document.addEventListener('appmodechange', scheduleLayout);
   window.addEventListener('resize', scheduleLayout);
   window.visualViewport?.addEventListener('resize', scheduleLayout);
   window.visualViewport?.addEventListener('scroll', scheduleLayout);
