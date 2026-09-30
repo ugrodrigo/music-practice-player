@@ -13,6 +13,7 @@
   <script src="waveform.js" defer></script>
   <script src="audio-store.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="recording-folder.js" defer></script>
   <script src="pwa.js" defer></script>
 </head>
 <body data-waveform-expanded="true">
@@ -74,6 +75,13 @@
       <h2 id="lyrics-heading" class="sr-only">Lyrics</h2>
       <div id="lyrics-display-config" hidden>
       <h3 class="config-heading">Settings</h3>
+      <section class="recording-folder" aria-labelledby="recording-heading">
+        <h4 id="recording-heading">Recording folder</h4>
+        <p>Test folder saving before using the looper. The test creates a one-second silent WAV file; it does not use the microphone.</p>
+        <p id="recording-name">No folder selected</p>
+        <div class="recording-actions"><button id="recording-choose" type="button" disabled>Choose folder</button><button id="recording-test" type="button" disabled>Save test WAV</button><button id="recording-retry" type="button" hidden>Retry save</button><button id="recording-download" type="button" hidden>Download pending file</button><button id="recording-disconnect" type="button" disabled>Disconnect folder</button></div>
+        <p id="recording-status" role="status">Checking folder access...</p>
+      </section>
       <div class="audio-memory"><label><input id="remember-audio" type="checkbox" checked> Remember last audio on this device</label><button id="forget-audio" type="button">Remove saved audio</button><p id="audio-memory-status" role="status"></p></div>
       <div class="screen-awake-row"><label><input id="keep-screen-awake" type="checkbox" checked> Keep screen on</label><button id="screen-awake-status" type="button" aria-live="polite" hidden></button></div>
       <div class="lyrics-size-controls" aria-label="Lyrics display"><span class="lyrics-size-label">Text size</span><button id="lyrics-smaller" type="button" aria-label="Smaller lyrics">A-</button><span id="lyrics-size" aria-live="polite">16px</span><button id="lyrics-larger" type="button" aria-label="Larger lyrics">A+</button></div>

@@ -153,3 +153,16 @@ The phone header is fixed edge-to-edge with safe-area padding. Lyric height reca
 The solid gear opens a separate Settings view with text size, box height, and Keep screen on. Lyrics are hidden while Settings is open; tap Lyrics to return. The header no longer displays offline-status text; update notifications remain available.
 
 In Settings, **Remember last audio on this device** controls local audio persistence. **Remove saved audio** deletes the stored copy without stopping the current song. Only the latest successfully loaded audio is retained, preserving its filename, type, and modification time so cached lyrics still match. Storage failures do not interrupt playback. Clearing site data or browser eviction can remove the copy. After installing this update, open a song once to save it. Offline browser tests passed automatic restoration without the picker, paused playback state, cue restoration, preserved file identity, quota failure, deletion, and persistent opt-out.
+
+## Recording folder prototype
+
+Branch: `feature/looper-folder-storage`. This first step validates folder access before implementing microphone recording or the looper. It adds **Settings ? Recording folder** without changing the practice workflow.
+
+1. Open an HTTPS preview of this branch in the target phone browser. A plain HTTP LAN preview cannot test directory access.
+2. Choose **Choose folder** and grant read/write access to a dedicated folder.
+3. Choose **Save test WAV**. The app creates a one-second silent WAV named `recording-test_YYYY-MM-DD_HH-mm-ss-SSS_<unique-id>.wav`, using local time. It does not record the microphone.
+4. Verify the file in the phone's file manager, then close/reopen the PWA. The folder should be remembered. Choose **Save test WAV** again; the browser may ask to renew permission.
+
+The app persists a pending test file before attempting the folder write and reports success only after the write closes. A failed save offers retry or download. Pending files survive reload; disconnecting a folder never deletes its files. Existing files with different contents are never overwritten. An unavailable directory picker produces an explicit compatibility message. Downloads are a fallback, not confirmation that a chosen folder was written.
+
+Automated Edge checks used real File System Access handles in a browser-private test directory, substituting that handle for the system picker. They verified WAV bytes, English timestamp filenames, distinct files, stored-handle restoration, simulated disk-full failure, pending recovery after reload, disconnect, and picker cancellation. They do not establish Android/Brave system-picker compatibility or persistent OS permission; those require the phone workflow above. Existing playback, offline audio restoration, layout, and service-worker update checks also passed.
