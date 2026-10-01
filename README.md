@@ -160,9 +160,9 @@ Branch: `feature/looper-folder-storage`. Use the new **Practice / Looper** butto
 
 In **Looper**:
 
-1. Tap **Record new**, allow microphone access, play a phrase, then tap **Stop**. This first version records one layer, up to 3 minutes, with an input meter and no live microphone monitoring.
-2. Drag the waveform's start/end markers. Select **Start** or **End**, zoom and pan, then use the +/- controls with 1, 10 or 100 ms steps for fine adjustments. The numeric fields use seconds.
-3. **Play loop** repeats the selection. **Preview seam** plays across the end-to-start transition. Playback and loop exports apply a 3 ms edge fade to reduce clicks.
+1. Set **BPM** (30-300) and **Count in** (Off, 4 or 8 beats), then tap **Record new** and allow microphone access. Audible/visual counting starts after permission is granted; recording starts after the last beat interval. The default is 4 beats at 100 BPM, and these settings are remembered. **Stop** cancels a count-in without creating a take. Play a phrase, then tap **Stop**. This first version records one layer, up to 3 minutes, with an input meter and no live microphone monitoring.
+2. Pinch the waveform with two fingers to zoom from 1x to 16x around the gesture midpoint; drag away from a marker with one finger to pan. Drag the waveform's start/end markers. Select **Start** or **End**, zoom and pan, then use the +/- controls with 1, 10 or 100 ms steps for fine adjustments. The numeric fields use seconds.
+3. **Play loop** repeats the selection. **Preview seam** plays across the end-to-start transition. Editing markers updates the running loop without restarting its audio source. The current position continues until the end boundary; moving the end behind it wraps playback into the new loop. Loop WAV exports apply a 3 ms edge fade to reduce clicks.
 4. Rename the take if desired. Audio and loop boundaries save automatically in IndexedDB. **Saved recordings** reopens or deletes takes; deleting inside the app preserves external files.
 5. **Download loop WAV** exports the trimmed selection; **Download original WAV** exports the full take. Names are English and contain a UTC timestamp and unique suffix, e.g. `recording_2026-09-30T14-25-30-123Z_a1b2c3d4_loop.wav`.
 
@@ -175,3 +175,13 @@ Local browser storage is not a permanent backup: clearing site data or browser e
 ### Looper verification
 
 Run `python tests/looper_smoke.py` on Windows with Microsoft Edge installed. The test uses an isolated temporary profile and a simulated microphone. It checks actual MediaRecorder capture and decoding, trims, looping, WAV contents, automatic folder copies using browser-private handles, offline library restoration, permission denial, cancelled requests, storage failure recovery, deletion, and layouts from 320 to 1366 pixels. Physical Android microphone quality, latency, directory access and OS wake-lock behavior still need device testing. Existing practice-player, lyrics, cues, audio-memory and PWA-update regression checks also passed.
+
+Looper interaction checks also cover real two-finger touch events without marker changes, live source continuity during boundary edits, count-in duration at 100 BPM, and cancellation without creating a take.
+
+### Looper audio devices
+
+Open **Audio input / output**, connect your USB-C microphone and headphones, then choose **Find devices** and grant microphone permission. Select **Microphone** and **Looper output** independently. **Test input** displays the actual microphone name and a live level meter without recording or monitoring it through speakers; tap **Stop test** to release it. **Test output** plays a short tone. Input testing stops when you start recording, leave Looper, or hide the app.
+
+Selections are remembered on this browser. Recording requests the selected microphone explicitly and fails if it is unavailable, rather than silently using another input. Device lists refresh on connection changes; input/output changes are locked during recording and loop playback. If a selected output cannot be opened, choose another output or System default before recording. **Allow output device** is offered where the browser supports a permission picker. Output selection affects loop playback, the count-in and the test tone; the Practice player keeps the system output.
+
+A PWA can only select devices exposed by the browser and OS. If output selection is unsupported, the control stays on **System default** and the app explains how to use Android's output selection. A USB-C microphone plus Bluetooth headphones must still be verified on the physical phone. Browser tests cover explicit input constraints, microphone-test cleanup, output tones, missing-device failures, preference restoration and existing looper workflows; they cannot verify Android's hardware routing.

@@ -355,3 +355,16 @@ body[data-app-mode="looper"] .practice-content, body[data-app-mode="looper"] .sh
   .looper-heading { gap: 8px; }
   #looper-panel .looper-heading button { font-size: 12px; }
 }
+
+.looper-count-settings { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; }
+.looper-count-settings label { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+#looper-panel #looper-bpm { width: 80px; }
+
+.looper-io { margin: 14px 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+.looper-io summary { cursor: pointer; min-height: 32px; font-weight: 600; }
+.looper-io-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.looper-io-grid label { display: grid; gap: 6px; font-size: 13px; }
+.looper-io-grid select { width: 100%; min-width: 0; }
+.looper-io-meter { display: flex; align-items: center; gap: 10px; margin: 12px 0; font-size: 13px; }
+#io-active, #io-status { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; color: var(--muted); }
+@media(max-width: 480px) { .looper-io-grid { grid-template-columns: 1fr; } }

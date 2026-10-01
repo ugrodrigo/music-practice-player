@@ -6,14 +6,19 @@
   let ctx, source = null, stream = null, recorder = null, analyser = null, inputNode = null;
   let record = null, buffer = null, peaks = null, fullWav = null;
   let state = 'idle', selected = 'start', viewStart = 0, pointer = null, frozenView = null;
-  let playGeneration = 0;
+  let playGeneration = 0, zoom = 1;
+  const touches = new Map();
+  let pinch = null, gesture = null, suppressGesture = false;
+  let countTimer = 0, countResolve = null, clicks = [];
+  let loopStart = 0, loopEnd = 0;
   let frame = 0, recordStart = 0, playStart = 0, playOffset = 0, playDuration = 0;
   let limitTimer = 0, saveTimer = 0, seamTimer = 0, operation = 0, editVersion = 0;
   let dirty = false, recordingError = '', folderQueue = Promise.resolve();
-  const busy = () => ['requesting', 'recording', 'finishing', 'loading'].includes(state);
+  const busy = () => ['requesting', 'counting', 'recording', 'finishing', 'loading'].includes(state);
   const status = text => { $('status').textContent = text; };
   const time = seconds => `${String(Math.floor(Math.max(0, seconds) / 60)).padStart(2, '0')}:${(Math.max(0, seconds) % 60).toFixed(1).padStart(4, '0')}`;
   function context() { return ctx ||= new AudioContext({ latencyHint: 'interactive' }); }
+  const io = new LooperAudioIO(context);
   function activity() {
     window.looperBusy = busy() || dirty;
     window.looperActive = document.body.dataset.appMode === 'looper' && (busy() || !!record);
@@ -21,18 +26,20 @@
   }
   function render() {
     const loaded = !!buffer, locked = busy();
+    io.lock(locked || state === 'playing');
     for (const id of ['play', 'start', 'end', 'earlier', 'later', 'seam', 'zoom', 'export-loop']) $(id).disabled = !loaded || locked;
     $('export-full').disabled = !record || locked;
     $('saved').disabled = locked;
     $('name').disabled = !record || locked;
     $('record').disabled = locked;
+    $('bpm').disabled = $('count-in').disabled = locked;
     $('record').textContent = state === 'recording' ? 'Recording...' : 'Record new';
-    $('stop').disabled = !['requesting', 'recording', 'playing'].includes(state);
+    $('stop').disabled = !['requesting', 'counting', 'recording', 'playing'].includes(state);
     $('folder-save').disabled = !loaded || locked;
     $('folder').disabled = locked || !window.RecordingFolder?.supported;
     $('select-start').disabled = !loaded || locked;
     $('select-end').disabled = !loaded || locked;
-    $('pan').disabled = !loaded || locked || $('zoom').value === '1';
+    $('pan').disabled = !loaded || locked || zoom === 1;
     if (record) {
       $('start').value = record.start.toFixed(3); $('end').value = record.end.toFixed(3);
       $('start').max = String(Math.max(0, record.end - .05));
@@ -44,7 +51,7 @@
   }
   function view() {
     if (!buffer) return { start: 0, span: 1 };
-    const span = buffer.duration / Number($('zoom').value);
+    const span = buffer.duration / zoom;
     viewStart = Math.max(0, Math.min(buffer.duration - span, viewStart));
     $('pan').max = String(buffer.duration - span); $('pan').value = String(viewStart);
     $('window').textContent = `${time(viewStart)} - ${time(viewStart + span)}`;
@@ -72,7 +79,7 @@
       ink.fillRect(pos - 5 * ratio, 0, 10 * ratio, 22 * ratio);
     }
     if (state === 'playing') {
-      const position = record.start + ((ctx.currentTime - playStart + playOffset) % playDuration);
+      const position = playbackPosition();
       ink.fillStyle = '#ffffff'; ink.fillRect(x(position), 0, 2 * ratio, height);
       $('clock').textContent = time(position);
     } else $('clock').textContent = time(record.end - record.start);
@@ -85,12 +92,17 @@
     } else draw();
     if (state === 'recording' || state === 'playing') frame = requestAnimationFrame(animate);
   }
+  function playbackPosition() {
+    const position = playOffset + Math.max(0, ctx.currentTime - playStart);
+    return position < loopEnd ? position : loopStart + (position - loopEnd) % (loopEnd - loopStart);
+  }
   function stopPlayback() {
     playGeneration++; clearTimeout(seamTimer); cancelAnimationFrame(frame);
     if (source) { try { source.stop(); } catch {} source.disconnect(); source = null; }
     if (state === 'playing') state = 'idle';
   }
   function cleanupInput() {
+    cancelCount();
     clearTimeout(limitTimer); stream?.getTracks().forEach(track => track.stop()); stream = null;
     inputNode?.disconnect(); inputNode = null; analyser?.disconnect(); analyser = null; $('meter').value = 0;
   }
@@ -117,18 +129,21 @@
   }
   async function play(seam = false) {
     if (!buffer || busy()) return;
-    stopPlayback(); const generation = playGeneration;
+    if (io.isBusy) { status('Finish or cancel the device test first.'); return; }
+    io.stopTest();
+    stopPlayback(); const generation = playGeneration; io.lock(true);
     try {
-      await context().resume();
+      await context().resume(); await io.prepareOutput();
       if (generation !== playGeneration) return;
       if (!buffer || document.body.dataset.appMode !== 'looper' || busy()) return;
-      source = ctx.createBufferSource(); source.buffer = trimmed(); source.loop = true; source.connect(ctx.destination);
-      playDuration = source.buffer.duration; playOffset = seam ? Math.max(0, playDuration - Math.min(.75, playDuration / 2)) : 0;
+      source = ctx.createBufferSource(); source.buffer = buffer; source.loop = true;
+      loopStart = record.start; loopEnd = record.end; source.loopStart = loopStart; source.loopEnd = loopEnd; source.connect(ctx.destination);
+      playDuration = loopEnd - loopStart; playOffset = seam ? loopEnd - Math.min(.75, playDuration / 2) : loopStart;
       playStart = ctx.currentTime; source.start(playStart, playOffset); state = 'playing';
       status(seam ? 'Previewing the end-to-start join.' : 'Loop playing. Adjust either marker to refine the loop.');
-      if (seam) seamTimer = setTimeout(() => { stopPlayback(); status('Seam preview finished. Adjust the markers or play the loop.'); render(); }, (playDuration - playOffset + Math.min(.75, playDuration / 2)) * 1000);
+      if (seam) seamTimer = setTimeout(() => { stopPlayback(); status('Seam preview finished. Adjust the markers or play the loop.'); render(); }, (loopEnd - playOffset + Math.min(.75, playDuration / 2)) * 1000);
       render(); animate();
-    } catch { stopPlayback(); status('Playback could not start. Tap Play loop to retry.'); render(); }
+    } catch (error) { stopPlayback(); status(error.message || 'Playback could not start. Tap Play loop to retry.'); render(); }
   }
   function download(blob, name) {
     const url = URL.createObjectURL(blob), link = document.createElement('a'); link.href = url; link.download = name;
@@ -187,7 +202,15 @@
     const playing = state === 'playing';
     if (edge === 'start') record.start = Math.max(0, Math.min(record.end - .05, value));
     else record.end = Math.min(buffer.duration, Math.max(record.start + .05, value));
-    selected = edge; changed(); render(); if (playing) play();
+    if (playing && source) {
+      const position = playbackPosition();
+      loopStart = record.start; loopEnd = record.end;
+      source.loopStart = loopStart; source.loopEnd = loopEnd;
+      playOffset = position >= loopEnd ? loopStart + (position - loopEnd) % (loopEnd - loopStart) : position;
+      playStart = ctx.currentTime;
+      clearTimeout(seamTimer);
+    }
+    selected = edge; changed(); render();
   }
   async function decodeCurrent(blob, token) {
     const decoded = await context().decodeAudioData(await blob.arrayBuffer());
@@ -196,7 +219,7 @@
     buffer = decoded; record.duration = buffer.duration;
     record.start = Math.max(0, Math.min(record.start || 0, buffer.duration - .05));
     record.end = Math.max(record.start + .05, Math.min(record.end || buffer.duration, buffer.duration));
-    fullWav = null; viewStart = 0; $('zoom').value = '1'; buildPeaks();
+    fullWav = null; viewStart = 0; zoom = 1; $('zoom').value = '1'; buildPeaks();
   }
   function fileName(id) { return `recording_${new Date().toISOString().replace(/[:.]/g, '-')}_${id.slice(0, 8)}`; }
   async function finishRecording(chunks, mime, token) {
@@ -214,15 +237,59 @@
     } catch (error) { status(`${error.message || 'Could not decode recording.'} The original take can still be downloaded.`); }
     finally { state = 'idle'; render(); }
   }
+  function cancelCount() {
+    clearTimeout(countTimer);
+    for (const click of clicks) { try { click.stop(); } catch {} }
+    clicks = []; countResolve?.(false); countResolve = null;
+  }
+  function countIn() {
+    const beats = Number($('count-in').value);
+    if (!beats) return Promise.resolve(true);
+    state = 'counting'; render();
+    const interval = 60 / Number($('bpm').value), start = ctx.currentTime + .08;
+    for (let beat = 0; beat < beats; beat++) {
+      const oscillator = ctx.createOscillator(), gain = ctx.createGain(), at = start + beat * interval;
+      oscillator.frequency.value = beat % 4 === 0 ? 1000 : 700;
+      gain.gain.setValueAtTime(0, at); gain.gain.linearRampToValueAtTime(.18, at + .002);
+      gain.gain.exponentialRampToValueAtTime(.001, at + .045);
+      oscillator.connect(gain); gain.connect(ctx.destination);
+      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+      oscillator.start(at); oscillator.stop(at + .05); clicks.push(oscillator);
+    }
+    return new Promise(resolve => {
+      countResolve = resolve;
+      const tick = () => {
+        const elapsed = ctx.currentTime - start;
+        if (elapsed >= beats * interval) { clicks = []; countResolve = null; resolve(true); return; }
+        status(`Count in: ${Math.max(1, Math.floor(elapsed / interval) + 1)} / ${beats}`);
+        countTimer = setTimeout(tick, 10);
+      };
+      tick();
+    });
+  }
+  function saveCountSettings() {
+    $('bpm').value = String(Math.max(30, Math.min(300, Math.round(Number($('bpm').value) || 100))));
+    try { localStorage.setItem('music-practice-player:count-in', JSON.stringify({ bpm: Number($('bpm').value), beats: Number($('count-in').value) })); } catch {}
+  }
+  try {
+    const saved = JSON.parse(localStorage.getItem('music-practice-player:count-in'));
+    if (saved?.bpm >= 30 && saved.bpm <= 300) $('bpm').value = saved.bpm;
+    if ([0, 4, 8].includes(saved?.beats)) $('count-in').value = saved.beats;
+  } catch {}
+  $('bpm').addEventListener('change', saveCountSettings);
+  $('count-in').addEventListener('change', saveCountSettings);
   async function recordNew() {
     if (busy()) return;
+    if (io.isBusy) { status('Finish or cancel the device test first.'); return; }
+    io.stopTest();
     if (dirty && !await persist() && !confirm('The current recording is not saved. Discard it and record another take?')) return;
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder || !window.isSecureContext) { status('Recording requires microphone support and HTTPS. Open the installed app or HTTPS website.'); return; }
+    saveCountSettings();
     stopPlayback(); const token = ++operation; state = 'requesting'; recordingError = ''; status('Allow microphone access to start recording.'); render();
     try {
-      await context().resume();
+      await context().resume(); await io.prepareOutput();
       if (token !== operation) return;
-      const input = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+      const input = await io.openInput();
       if (token !== operation || state !== 'requesting') { input.getTracks().forEach(track => track.stop()); return; }
       stream = input;
       const mime = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4'].find(type => MediaRecorder.isTypeSupported(type));
@@ -231,8 +298,9 @@
       recorder.addEventListener('dataavailable', event => { if (event.data.size) { chunks.push(event.data); bytes += event.data.size; } if (bytes > 32 * 1024 * 1024 && recorder.state === 'recording') { recordingError = 'Recording stopped at the size limit.'; stopRecording(); } });
       recorder.addEventListener('error', () => { recordingError = 'Recording was interrupted. Any captured audio has been kept.'; stopRecording(); });
       recorder.addEventListener('stop', () => finishRecording(chunks, recorder.mimeType || chunks[0]?.type || 'audio/webm', token));
-      input.getAudioTracks().forEach(track => track.addEventListener('ended', () => { if (state === 'recording') { recordingError = 'Microphone disconnected. The captured take has been kept.'; stopRecording(); } }));
+      input.getAudioTracks().forEach(track => track.addEventListener('ended', () => { if (['recording', 'counting'].includes(state)) { recordingError = 'Microphone disconnected. The captured take has been kept.'; stopRecording(); } }));
       inputNode = ctx.createMediaStreamSource(stream); analyser = ctx.createAnalyser(); analyser.fftSize = 1024; inputNode.connect(analyser);
+      if (!await countIn() || token !== operation) return;
       recorder.start(500); state = 'recording'; recordStart = performance.now();
       limitTimer = setTimeout(() => { recordingError = 'Recording stopped at the 3-minute limit.'; stopRecording(); }, 180000);
       status('Recording microphone. Tap Stop when your phrase is complete.'); render(); animate();
@@ -242,7 +310,7 @@
     }
   }
   function stopRecording() {
-    if (state === 'requesting') { operation++; state = 'idle'; cleanupInput(); status('Recording cancelled.'); render(); return; }
+    if (['requesting', 'counting'].includes(state)) { operation++; cancelCount(); state = 'idle'; cleanupInput(); status('Recording cancelled.'); render(); return; }
     if (recorder?.state === 'recording') { state = 'finishing'; clearTimeout(limitTimer); recorder.stop(); cleanupInput(); render(); }
   }
   async function openSaved(id) {
@@ -282,7 +350,7 @@
   function setMode(mode) {
     if (mode === 'practice' && busy()) { status('Tap Stop and wait for the recording to finish before switching modes.'); return; }
     if (mode === 'looper') document.dispatchEvent(new Event('practicepause'));
-    else { stopPlayback(); if (dirty) persist(); }
+    else { io.stopTest(); stopPlayback(); if (dirty) persist(); }
     document.body.dataset.appMode = mode; $('panel').hidden = mode !== 'looper';
     for (const name of ['practice', 'looper']) document.getElementById(`mode-${name}`).setAttribute('aria-pressed', String(name === mode));
     document.dispatchEvent(new Event('appmodechange')); render();
@@ -290,27 +358,64 @@
   document.getElementById('mode-practice').addEventListener('click', () => setMode('practice'));
   document.getElementById('mode-looper').addEventListener('click', () => setMode('looper'));
   $('record').addEventListener('click', recordNew);
-  $('stop').addEventListener('click', () => { if (['recording', 'requesting'].includes(state)) stopRecording(); else { stopPlayback(); status('Loop stopped.'); render(); } });
+  $('stop').addEventListener('click', () => { if (['recording', 'requesting', 'counting'].includes(state)) stopRecording(); else { stopPlayback(); status('Loop stopped.'); render(); } });
   $('play').addEventListener('click', () => play()); $('seam').addEventListener('click', () => play(true));
   $('saved').addEventListener('click', library); $('library-close').addEventListener('click', () => $('library').close());
   $('name').addEventListener('input', () => { if (record) { record.name = $('name').value.trim() || 'Untitled recording'; changed(); } });
   for (const edge of ['start', 'end']) { $(`select-${edge}`).addEventListener('click', () => { selected = edge; render(); }); $(edge).addEventListener('change', () => adjust(edge, Number($(edge).value))); }
   $('earlier').addEventListener('click', () => adjust(selected, record[selected] - Number($('step').value)));
   $('later').addEventListener('click', () => adjust(selected, record[selected] + Number($('step').value)));
-  $('zoom').addEventListener('change', () => { viewStart = Math.max(0, record[selected] - buffer.duration / Number($('zoom').value) / 2); render(); });
+  $('zoom').addEventListener('change', () => { zoom = Number($('zoom').value); viewStart = Math.max(0, record[selected] - buffer.duration / zoom / 2); render(); });
   $('pan').addEventListener('input', () => { viewStart = Number($('pan').value); draw(); });
   function drag(event) {
     const rect = canvas.getBoundingClientRect(), v = frozenView || view();
     adjust(selected, v.start + Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)) * v.span);
   }
+  function syncZoom() {
+    let option = $('zoom').querySelector('[data-pinch]');
+    if (!option) { option = new Option(); option.dataset.pinch = ''; $('zoom').add(option); }
+    option.value = String(zoom); option.textContent = `${zoom.toFixed(1)}x`; $('zoom').value = String(zoom);
+  }
   canvas.addEventListener('pointerdown', event => {
-    if (!buffer || busy() || !event.isPrimary || event.button !== 0) return;
-    const rect = canvas.getBoundingClientRect(), v = view(), startX = (record.start - v.start) / v.span * rect.width, endX = (record.end - v.start) / v.span * rect.width, x = event.clientX - rect.left;
-    if (Math.min(Math.abs(startX - x), Math.abs(endX - x)) < 24) selected = Math.abs(startX - x) <= Math.abs(endX - x) ? 'start' : 'end';
-    frozenView = { ...v }; pointer = event.pointerId; canvas.setPointerCapture(pointer); drag(event);
+    if (!buffer || busy() || event.button !== 0) return;
+    canvas.setPointerCapture(event.pointerId);
+    touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (touches.size === 2) frozenView = null;
+    const rect = canvas.getBoundingClientRect(), v = view();
+    if (touches.size === 2) {
+      const [a, b] = [...touches.values()];
+      pinch = { distance: Math.max(1, Math.hypot(a.x-b.x, a.y-b.y)), zoom,
+        anchor: v.start + ((a.x+b.x)/2-rect.left)/rect.width*v.span };
+      pointer = null; frozenView = null; suppressGesture = true; return;
+    }
+    if (touches.size !== 1 || suppressGesture) return;
+    const startX = (record.start-v.start)/v.span*rect.width, endX = (record.end-v.start)/v.span*rect.width, x = event.clientX-rect.left;
+    const near = Math.min(Math.abs(startX-x), Math.abs(endX-x)) < 24;
+    if (near) selected = Math.abs(startX-x) <= Math.abs(endX-x) ? 'start' : 'end';
+    frozenView = { ...v }; pointer = event.pointerId;
+    gesture = { x: event.clientX, pan: event.pointerType === 'touch' && !near };
+    if (event.pointerType !== 'touch') drag(event);
   });
-  canvas.addEventListener('pointermove', event => { if (pointer === event.pointerId) drag(event); });
-  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, event => { if (pointer !== event.pointerId) return; pointer = null; frozenView = null; if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId); render(); });
+  canvas.addEventListener('pointermove', event => {
+    if (!touches.has(event.pointerId)) return;
+    touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pinch && touches.size === 2) {
+      const [a,b] = [...touches.values()], rect = canvas.getBoundingClientRect();
+      zoom = Math.max(1, Math.min(16, pinch.zoom * Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance));
+      viewStart = pinch.anchor - ((a.x+b.x)/2-rect.left)/rect.width*buffer.duration/zoom;
+      syncZoom(); render(); return;
+    }
+    if (pointer !== event.pointerId || suppressGesture) return;
+    if (gesture.pan) { viewStart = frozenView.start - (event.clientX-gesture.x)/canvas.clientWidth*frozenView.span; const previous = frozenView; frozenView = null; draw(); frozenView = previous; }
+    else drag(event);
+  });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, event => {
+    if (!touches.has(event.pointerId)) return;
+    touches.delete(event.pointerId); pointer = null; frozenView = null; pinch = null;
+    if (!touches.size) { suppressGesture = false; gesture = null; }
+    if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+    render();
+  });
   for (const type of ['loop', 'full']) $(`export-${type}`).addEventListener('click', async () => {
     if (!record || busy()) return;
     const item = record;
@@ -330,11 +435,11 @@
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') {
       if (state === 'recording') { recordingError = 'Recording stopped because the app left the screen. The captured take has been kept.'; stopRecording(); }
-      else if (state === 'requesting') stopRecording();
+      else if (['requesting', 'counting'].includes(state)) stopRecording();
       stopPlayback(); if (dirty) persist(); render();
     }
   });
-  window.addEventListener('pagehide', () => { if (state === 'recording') stopRecording(); cleanupInput(); stopPlayback(); });
+  window.addEventListener('pagehide', () => { if (['recording', 'requesting', 'counting'].includes(state)) stopRecording(); cleanupInput(); stopPlayback(); });
   window.addEventListener('beforeunload', event => { if (busy() || dirty) { event.preventDefault(); event.returnValue = ''; } });
   new ResizeObserver(draw).observe(canvas);
   render();

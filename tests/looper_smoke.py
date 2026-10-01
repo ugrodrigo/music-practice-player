@@ -93,7 +93,7 @@ try:
     stage=Path(tempfile.mkdtemp(prefix='mpp-pwa-site-'))
     site=stage/'music-practice-player'
     site.mkdir()
-    for name in ['index.html','style.css','app.js','audio-store.js','lyrics.js','waveform.js','pwa.js','recording-folder.js','looper-store.js','looper.js','sw.js','manifest.webmanifest']:
+    for name in ['index.html','style.css','app.js','audio-store.js','lyrics.js','waveform.js','pwa.js','recording-folder.js','looper-store.js','looper.js','looper-io.js','sw.js','manifest.webmanifest']:
         shutil.copy2(ROOT/name,site/name)
     shutil.copytree(ROOT/'icons',site/'icons')
     class QuietHandler(SimpleHTTPRequestHandler):
@@ -114,12 +114,44 @@ try:
       document.getElementById('mode-looper').click();
       check(testAudio.paused,'Practice pauses on mode switch');
       check(getComputedStyle(document.querySelector('.practice-content')).display==='none','Practice hidden');
+      const io=id=>document.getElementById('io-'+id);
+      document.getElementById('looper-io').open=true;
+      io('refresh').click();await waitLong(()=>!io('refresh').disabled&&io('input').options.length>1);
+      const mic=[...io('input').options].find(o=>o.value&&o.value!=='default'&&o.value!=='communications');
+      check(!!mic,'Concrete microphone enumerated');io('input').value=mic.value;io('input').dispatchEvent(new Event('change'));
+      const nativeInput=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+      window.requestedInputs=[];window.inputStreams=[];
+      navigator.mediaDevices.getUserMedia=async constraints=>{requestedInputs.push(constraints);const stream=await nativeInput(constraints);inputStreams.push(stream);return stream;};
+      io('test-input').click();await waitLong(()=>io('status').textContent.startsWith('Speak'));
+      check(requestedInputs.at(-1).audio.deviceId.exact===mic.value,'Input test requests the selected device exactly');
+      check(io('active').textContent.includes('Microphone:'),'Active microphone identified');
+      io('test-input').click();check(inputStreams.at(-1).getTracks().every(t=>t.readyState==='ended'),'Input test releases microphone');
+      io('test-output').click();await waitLong(()=>io('status').textContent.startsWith('Test tone sent'));
+      if(typeof AudioContext.prototype.setSinkId==='function'){
+        io('output').add(new Option('Missing output','missing-output-test'));io('output').value='missing-output-test';io('output').dispatchEvent(new Event('change'));
+        const requests=requestedInputs.length;el('record').click();await waitLong(()=>el('status').textContent.includes('Selected output is unavailable'));
+        check(requestedInputs.length===requests,'Unavailable output prevents capture instead of silently rerouting');
+        io('output').value='';io('output').dispatchEvent(new Event('change'));
+      }
+      io('input').add(new Option('Missing lapel','missing-input-test'));io('input').value='missing-input-test';io('input').dispatchEvent(new Event('change'));
+      const requests=requestedInputs.length;el('record').click();await waitLong(()=>el('status').textContent.startsWith('Could not start recording'));
+      check(requestedInputs.length===requests+1&&requestedInputs.at(-1).audio.deviceId.exact==='missing-input-test','Missing input does not fall back to default');
+      io('input').value=mic.value;io('input').dispatchEvent(new Event('change'));
+      document.getElementById('looper-io').open=false;
+
       el('folder').click();await waitLong(()=>RecordingFolder.name==='test-recordings');
-      el('record').click();await waitLong(()=>el('record').textContent==='Recording...');
+      window.startedSources=[];
+      const nativeStart=AudioBufferSourceNode.prototype.start;
+      AudioBufferSourceNode.prototype.start=function(...args){startedSources.push(this);return nativeStart.apply(this,args);};
+      const before=performance.now();el('record').click();
+      await waitLong(()=>el('status').textContent.startsWith('Count in:'));
+      check(el('bpm').disabled&&!el('stop').disabled,'Count-in locks settings but allows cancellation');
+      await waitLong(()=>el('record').textContent==='Recording...');
+      check(performance.now()-before>=2350,'Four beats at 100 BPM before recording');
       document.getElementById('mode-practice').click();check(document.body.dataset.appMode==='looper','Mode protected during recording');
       await new Promise(r=>setTimeout(r,1400));el('stop').click();
       await waitLong(()=>!el('play').disabled);
-      check(el('save-status').textContent==='Saved on this device.','Recording saved');
+      check(el('save-status').textContent==='Saved on this device.','Recording saved');check(requestedInputs.at(-1).audio.deviceId.exact===mic.value,'Recorder uses the selected microphone');
       const list=await LooperStore.list();check(list.length===1&&list[0].duration>1,'Actual MediaRecorder capture decoded');window.savedId=list[0].id;
       await waitLong(()=>el('folder-status').textContent.startsWith('Saved to'));
       const dir=await(await navigator.storage.getDirectory()).getDirectoryHandle('test-recordings');
@@ -130,7 +162,7 @@ try:
       el('name').value='Guitar phrase';el('name').dispatchEvent(new Event('input'));
       await waitLong(async()=> (await LooperStore.read(savedId)).name==='Guitar phrase');
       el('play').click();await waitLong(()=>el('status').textContent.startsWith('Loop playing'));
-      check(!el('stop').disabled,'Loop plays');el('later').click();el('later').click();await new Promise(r=>setTimeout(r,100));el('stop').click();
+      check(!el('stop').disabled,'Loop plays');const count=startedSources.length,playing=startedSources.at(-1);el('later').click();el('later').click();check(startedSources.length===count&&playing.loopEnd===Number(el('end').value),'Editing boundaries updates the live source without restart');await new Promise(r=>setTimeout(r,100));el('stop').click();
       el('seam').click();await waitLong(()=>el('status').textContent.startsWith('Previewing'));await waitLong(()=>el('stop').disabled);
       el('zoom').value='4';el('zoom').dispatchEvent(new Event('change'));check(!el('pan').disabled,'Waveform zoom pans');
       window.downloads=[];HTMLAnchorElement.prototype.click=function(){if(this.download){const name=this.download;downloads.push(fetch(this.href).then(async r=>({name,bytes:await r.arrayBuffer()})));}};
@@ -140,6 +172,14 @@ try:
       check(Math.abs(data.getUint32(40,true)/data.getUint32(28,true)-(Number(el('end').value)-Number(el('start').value)))<.002,'Export matches trim');
       return 'PASS: real simulated microphone, loop, trim, seam, zoom, WAV export, autosave and folder copy';
     })()'''),flush=True)
+    cdp.js("el('zoom').value='1';el('zoom').dispatchEvent(new Event('change'));window.trimBefore=[el('start').value,el('end').value];")
+    rect=cdp.js("(()=>{const r=el('waveform').getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};})()")
+    center=rect['x']+rect['w']/2
+    y=rect['y']+rect['h']/2
+    for kind,points in [('touchStart',[(center-30,y),(center+30,y)]),('touchMove',[(center-65,y),(center+65,y)]),('touchEnd',[])]:
+        cdp.call('Input.dispatchTouchEvent',{'type':kind,'touchPoints':[{'x':x,'y':ty,'id':i+1} for i,(x,ty) in enumerate(points)]})
+    print(cdp.js("check(Number(el('zoom').value)>2,'Two-finger pinch zooms continuously');check(JSON.stringify(trimBefore)===JSON.stringify([el('start').value,el('end').value]),'Pinch preserves both markers')"),flush=True)
+    cdp.js("document.getElementById('looper-io').open=true")
     for width in [320,390,760,1366]:
         cdp.call('Emulation.setDeviceMetricsOverride',{'width':width,'height':844,'deviceScaleFactor':1,'mobile':False})
         time.sleep(.1)
@@ -154,10 +194,18 @@ try:
     print(cdp.js(r'''(async()=>{
       window.el=id=>document.getElementById('looper-'+id);
       window.waitLong=async predicate=>{for(let i=0;i<300;i++){if(await predicate())return;await new Promise(r=>setTimeout(r,30));}throw Error('Looper timeout: '+el('status').textContent);};
+      check(document.getElementById('io-input').value===JSON.parse(localStorage.getItem('music-practice-player:audio-io')).input,'Microphone preference restored');
       document.getElementById('mode-looper').click();el('saved').click();
       await waitLong(()=>document.querySelector('#looper-library-list button'));
       document.querySelector('#looper-library-list button').click();await waitLong(()=>!el('play').disabled);
       check(el('name').value==='Guitar phrase'&&Number(el('start').value)===.15,'Recording and trims restored');
+      el('bpm').value='180';el('bpm').dispatchEvent(new Event('change'));
+      el('count-in').value='8';el('count-in').dispatchEvent(new Event('change'));
+      const savedCount=(await LooperStore.list()).length;
+      el('record').click();await waitLong(()=>el('status').textContent.startsWith('Count in:'));el('stop').click();
+      await new Promise(r=>setTimeout(r,2800));
+      check(!el('record').disabled&&el('status').textContent==='Recording cancelled.'&&(await LooperStore.list()).length===savedCount,'Cancelling count-in creates no recording');
+      el('count-in').value='0';el('count-in').dispatchEvent(new Event('change'));
       const real=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
       navigator.mediaDevices.getUserMedia=async()=>{throw new DOMException('Blocked','NotAllowedError');};
       el('record').click();await waitLong(()=>el('status').textContent.includes('permission denied'));
@@ -176,6 +224,18 @@ try:
       check(el('play').disabled,'Delete clears current loop');el('library-close').click();
       document.getElementById('mode-practice').click();check(document.body.dataset.appMode==='practice','Practice remains available');
       return 'PASS: saved library restore, permission denial, cancelled capture cleanup, quota recovery, delete and mode switching';
+    })()'''),flush=True)
+    assert not cdp.errors,cdp.errors
+    cdp.call('Page.addScriptToEvaluateOnNewDocument',{'source':"Object.defineProperty(AudioContext.prototype,'setSinkId',{value:undefined,configurable:true});"})
+    cdp.call('Page.reload');time.sleep(.6);cdp.js(helpers)
+    print(cdp.js(r'''(async()=>{
+      document.getElementById('mode-looper').click();
+      const output=document.getElementById('io-output'),status=document.getElementById('io-status');
+      await waitFor(()=>status.textContent.includes('Output selection is unavailable'));
+      check(output.disabled&&output.value==='','Unsupported output stays on system default');
+      check(document.getElementById('io-choose-output').hidden,'Unsupported permission picker hidden');
+      document.getElementById('io-test-output').click();await waitFor(()=>status.textContent.startsWith('Test tone sent'));
+      return 'PASS: unsupported output fallback and system-output test tone';
     })()'''),flush=True)
     assert not cdp.errors,cdp.errors
     cdp.call('Browser.close')

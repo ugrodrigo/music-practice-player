@@ -15,6 +15,7 @@
   <script src="app.js" defer></script>
   <script src="recording-folder.js" defer></script>
   <script src="looper-store.js" defer></script>
+  <script src="looper-io.js" defer></script>
   <script src="looper.js" defer></script>
   <script src="pwa.js" defer></script>
 </head>
@@ -109,6 +110,12 @@
 
     <section id="looper-panel" class="panel" aria-labelledby="looper-heading" hidden>
       <div class="looper-heading"><h2 id="looper-heading">Looper</h2><button id="looper-saved" type="button">Saved recordings</button></div>
+      <details id="looper-io" class="looper-io"><summary>Audio input / output</summary>
+        <div class="looper-io-grid"><label>Microphone<select id="io-input"><option value="">System default</option></select></label><label>Looper output<select id="io-output"><option value="">System default</option></select></label></div>
+        <div class="looper-file-actions"><button id="io-refresh" type="button">Find devices</button><button id="io-choose-output" type="button" hidden>Allow output device</button><button id="io-test-input" type="button">Test input</button><button id="io-test-output" type="button">Test output</button></div>
+        <label class="looper-io-meter">Input level <meter id="io-meter" min="0" max="1" value="0">0</meter></label>
+        <p id="io-active" role="status"></p><p id="io-status" role="status">Connect your microphone and headphones, then find devices. Input testing does not play your microphone through the speakers.</p>
+      </details>
       <label for="looper-name">Recording name</label><input id="looper-name" type="text" maxlength="100" placeholder="Record a new loop" disabled>
       <div class="looper-meter-row"><span id="looper-clock">00:00.0</span><label>Input <meter id="looper-meter" min="0" max="1" value="0">0</meter></label></div>
       <p id="looper-status" role="status" aria-live="polite">Record a phrase, then adjust the start and end markers.</p>
@@ -117,6 +124,7 @@
       <label class="looper-pan-label">Waveform position<input id="looper-pan" type="range" min="0" max="0" step="0.001" value="0" disabled></label>
       <div class="looper-boundaries"><label><button id="looper-select-start" type="button" aria-pressed="true">Start</button><input id="looper-start" type="number" min="0" step="0.001" value="0" aria-label="Loop start in seconds" disabled></label><label><button id="looper-select-end" type="button" aria-pressed="false">End</button><input id="looper-end" type="number" min="0" step="0.001" value="0" aria-label="Loop end in seconds" disabled></label></div>
       <div class="looper-fine"><button id="looper-earlier" type="button" disabled aria-label="Move selected marker earlier">-</button><label>Step <select id="looper-step"><option value="0.001">1 ms</option><option value="0.01" selected>10 ms</option><option value="0.1">100 ms</option></select></label><button id="looper-later" type="button" disabled aria-label="Move selected marker later">+</button><button id="looper-seam" type="button" disabled>Preview seam</button></div>
+      <div class="looper-count-settings"><label>BPM <input id="looper-bpm" type="number" min="30" max="300" step="1" value="100"></label><label>Count in <select id="looper-count-in"><option value="0">Off</option><option value="4" selected>4 beats</option><option value="8">8 beats</option></select></label></div>
       <div class="looper-transport"><button id="looper-record" type="button">Record new</button><button id="looper-play" type="button" disabled>Play loop</button><button id="looper-stop" type="button" disabled>Stop</button></div>
       <p class="looper-help">One recording, up to 3 minutes. No live microphone monitoring. Keep this app open while recording.</p>
       <div class="looper-file-actions"><button id="looper-export-loop" type="button" disabled>Download loop WAV</button><button id="looper-export-full" type="button" disabled>Download original WAV</button><button id="looper-folder" type="button">Choose folder</button><button id="looper-folder-save" type="button" disabled>Save to folder</button></div>
