@@ -143,6 +143,8 @@ try:
       window.startedSources=[];
       const nativeStart=AudioBufferSourceNode.prototype.start;
       AudioBufferSourceNode.prototype.start=function(...args){startedSources.push(this);return nativeStart.apply(this,args);};
+      check(el('count-in').value==='0','Count-in defaults to Off');
+      el('count-in').value='4';el('count-in').dispatchEvent(new Event('change'));
       const before=performance.now();el('record').click();
       await waitLong(()=>el('status').textContent.startsWith('Count in:'));
       check(el('bpm').disabled&&!el('stop').disabled,'Count-in locks settings but allows cancellation');
@@ -238,6 +240,11 @@ try:
       return 'PASS: unsupported output fallback and system-output test tone';
     })()'''),flush=True)
     assert not cdp.errors,cdp.errors
+    cdp.js("localStorage.setItem('music-practice-player:count-in',JSON.stringify({bpm:120,beats:4}))")
+    cdp.call('Page.reload');time.sleep(.5);cdp.js(helpers)
+    print(cdp.js("check(document.getElementById('looper-count-in').value==='0'&&document.getElementById('looper-bpm').value==='120','Old count-in resets to Off while BPM survives');document.getElementById('looper-count-in').value='8';document.getElementById('looper-count-in').dispatchEvent(new Event('change'));"),flush=True)
+    cdp.call('Page.reload');time.sleep(.5);cdp.js(helpers)
+    print(cdp.js("check(document.getElementById('looper-count-in').value==='8','Explicit count-in choice survives later reloads')"),flush=True)
     cdp.call('Browser.close')
     server.shutdown()
 

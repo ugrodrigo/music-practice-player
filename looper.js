@@ -269,13 +269,15 @@
   }
   function saveCountSettings() {
     $('bpm').value = String(Math.max(30, Math.min(300, Math.round(Number($('bpm').value) || 100))));
-    try { localStorage.setItem('music-practice-player:count-in', JSON.stringify({ bpm: Number($('bpm').value), beats: Number($('count-in').value) })); } catch {}
+    try { localStorage.setItem('music-practice-player:count-in', JSON.stringify({ version: 2, bpm: Number($('bpm').value), beats: Number($('count-in').value) })); } catch {}
   }
   try {
     const saved = JSON.parse(localStorage.getItem('music-practice-player:count-in'));
     if (saved?.bpm >= 30 && saved.bpm <= 300) $('bpm').value = saved.bpm;
-    if ([0, 4, 8].includes(saved?.beats)) $('count-in').value = saved.beats;
+    if (saved?.version === 2 && [0, 4, 8].includes(saved.beats)) $('count-in').value = saved.beats;
   } catch {}
+  // Reset the old automatic count-in once; preserve subsequent explicit choices.
+  saveCountSettings();
   $('bpm').addEventListener('change', saveCountSettings);
   $('count-in').addEventListener('change', saveCountSettings);
   async function recordNew() {
