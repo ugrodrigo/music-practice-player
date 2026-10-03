@@ -20,6 +20,49 @@
   const cards = [];
   let selectedLyricTime = null;
   let cuePage = 0;
+  const volumeMobile = matchMedia('(max-width: 760px)');
+  let volume = 100, lastVolume = 100;
+  try {
+    const saved = JSON.parse(localStorage.getItem('music-practice-player:practice-volume'));
+    if (Number.isFinite(saved?.volume)) volume = Math.max(0, Math.min(100, saved.volume));
+    if (Number.isFinite(saved?.lastVolume) && saved.lastVolume > 0) lastVolume = Math.min(100, saved.lastVolume);
+  } catch {}
+  function renderVolume() {
+    // A squared taper gives finer control at quiet listening levels.
+    if (audio) audio.volume = (volume / 100) ** 2;
+    $('practice-volume-slider').value = String(volume);
+    $('practice-volume-slider').setAttribute('aria-valuetext', `${volume}%`);
+    $('volume-value').textContent = `${volume}%`;
+    $('practice-volume').classList.toggle('is-muted', volume === 0);
+    $('volume-mute').textContent = volume === 0 ? 'Unmute' : 'Mute';
+    const toggle = $('volume-toggle');
+    toggle.setAttribute('aria-label', volumeMobile.matches ? `Practice volume: ${volume}%` : volume === 0 ? 'Unmute practice audio' : 'Mute practice audio');
+    toggle.title = toggle.getAttribute('aria-label');
+    if (volumeMobile.matches) { toggle.setAttribute('aria-expanded', String($('practice-volume').classList.contains('is-open'))); toggle.setAttribute('aria-controls', 'volume-panel'); }
+    else { toggle.removeAttribute('aria-expanded'); toggle.removeAttribute('aria-controls'); }
+  }
+  function setVolume(value) {
+    volume = Math.max(0, Math.min(100, value)); if (volume > 0) lastVolume = volume;
+    renderVolume();
+    try { localStorage.setItem('music-practice-player:practice-volume', JSON.stringify({ volume, lastVolume })); } catch {}
+  }
+  function closeVolume() { $('practice-volume').classList.remove('is-open'); renderVolume(); }
+  const mute = () => setVolume(volume === 0 ? lastVolume : 0);
+  $('practice-volume-slider').addEventListener('input', event => setVolume(Number(event.target.value)));
+  $('practice-volume').addEventListener('keydown', event => {
+    if (event.key === 'Escape' && volumeMobile.matches) { closeVolume(); $('volume-toggle').focus(); event.preventDefault(); }
+    event.stopPropagation();
+  });
+  $('volume-toggle').addEventListener('click', () => {
+    if (!volumeMobile.matches) { mute(); return; }
+    $('practice-volume').classList.toggle('is-open'); renderVolume();
+  });
+  $('volume-mute').addEventListener('click', mute);
+  document.addEventListener('pointerdown', event => { if (!$('practice-volume').contains(event.target) && $('practice-volume').classList.contains('is-open')) closeVolume(); });
+  document.addEventListener('focusin', event => { if (!$('practice-volume').contains(event.target) && $('practice-volume').classList.contains('is-open')) closeVolume(); });
+  document.addEventListener('appmodechange', closeVolume);
+  volumeMobile.addEventListener('change', closeVolume);
+  renderVolume();
   const quickButtons = Array.from({ length: 8 }, (_, slot) => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -419,6 +462,7 @@
     setReady(false);
     announce("Loading audio…");
     current.preload = "auto";
+    current.volume = (volume / 100) ** 2;
     if ("preservesPitch" in current) current.preservesPitch = true;
     current.addEventListener("loadedmetadata", () => {
       if (current !== audio) return;
@@ -492,9 +536,9 @@
     } else if (space) {
       if (!event.repeat) togglePlayback();
     } else if (arrow) {
-      seekTo(audio.currentTime + (event.key === "ArrowLeft" ? -1 : 1) * (event.shiftKey ? 5 : 2));
+      seekTo(audio.currentTime + (event.key === "ArrowLeft" ? -1 : 1) * (event.shiftKey ? 5 : 0.5));
     } else if (fine) {
-      if (audio.paused) seekTo(audio.currentTime + (event.key === "[" ? -0.5 : 0.5));
+      if (audio.paused) seekTo(audio.currentTime + (event.key === "[" ? -2 : 2));
     } else {
       const index = speeds.indexOf(Number(ui.speed.value));
       changeSpeed(speeds[Math.max(0, Math.min(speeds.length - 1, index + (event.key === "-" ? -1 : 1)))]);

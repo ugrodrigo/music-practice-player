@@ -109,7 +109,21 @@ try:
     print(cdp.js(r'''(async()=>{
       window.el=id=>document.getElementById('looper-'+id);
       window.waitLong=async predicate=>{for(let i=0;i<300;i++){if(await predicate())return;await new Promise(r=>setTimeout(r,30));}throw Error('Looper timeout: '+el('status').textContent+' / '+el('save-status').textContent);};
-      await loadTestFile('looper-practice.wav');await testAudio.play();
+      await loadTestFile('looper-practice.wav');
+      testAudio.pause();testAudio.currentTime=10;
+      document.activeElement?.blur();key('ArrowRight','ArrowRight');check(testAudio.currentTime===10.5,'Arrow seeks 0.5s');
+      key('[','BracketLeft');check(testAudio.currentTime===8.5,'Bracket seeks 2s while paused');
+      key('ArrowRight','ArrowRight',true);check(testAudio.currentTime===13.5,'Shift arrow stays 5s');
+      const slider=document.getElementById('practice-volume-slider'),toggle=document.getElementById('volume-toggle');
+      toggle.click();check(toggle.getAttribute('aria-expanded')==='true','Mobile fader opens');
+      slider.value='40';slider.dispatchEvent(new Event('input'));check(Math.abs(testAudio.volume-.16)<.001,'Practice volume taper applied');
+      slider.focus();key('ArrowRight','ArrowRight');check(testAudio.currentTime===13.5,'Focused volume does not seek');
+      document.getElementById('volume-mute').click();check(testAudio.volume===0,'Mute');
+      document.getElementById('volume-mute').click();check(Math.abs(testAudio.volume-.16)<.001,'Unmute restores volume');
+      document.body.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));check(toggle.getAttribute('aria-expanded')==='false','Outside closes fader');
+      toggle.click();key('Escape','Escape');check(toggle.getAttribute('aria-expanded')==='false','Escape closes fader');
+      await loadTestFile('volume-next.wav');check(Math.abs(testAudio.volume-.16)<.001,'Volume survives song replacement');
+      await testAudio.play();
       window.cancelPicker=false;
       document.getElementById('mode-looper').click();
       check(testAudio.paused,'Practice pauses on mode switch');
@@ -228,6 +242,11 @@ try:
       return 'PASS: saved library restore, permission denial, cancelled capture cleanup, quota recovery, delete and mode switching';
     })()'''),flush=True)
     assert not cdp.errors,cdp.errors
+    for width in [320,360,390,760,1366]:
+        cdp.call('Emulation.setDeviceMetricsOverride',{'width':width,'height':844,'deviceScaleFactor':1,'mobile':False})
+        time.sleep(.1)
+        print(cdp.js("check(document.documentElement.scrollWidth<=innerWidth,'Practice volume fits viewport');check(document.getElementById('volume-toggle').getBoundingClientRect().right<=innerWidth,'Volume button in frame')"),flush=True)
+    print(cdp.js("check(document.getElementById('practice-volume-slider').value==='40','Volume preference restored after reload');document.getElementById('volume-toggle').click();check(document.getElementById('practice-volume-slider').value==='0','Desktop speaker mutes');document.getElementById('volume-toggle').click();check(document.getElementById('practice-volume-slider').value==='40','Desktop speaker unmutes')"),flush=True)
     cdp.call('Page.addScriptToEvaluateOnNewDocument',{'source':"Object.defineProperty(AudioContext.prototype,'setSinkId',{value:undefined,configurable:true});"})
     cdp.call('Page.reload');time.sleep(.6);cdp.js(helpers)
     print(cdp.js(r'''(async()=>{

@@ -44,11 +44,11 @@ Waveform analysis runs separately from playback, with no upload or dependencies.
 |---|---|
 | Space | Play / pause |
 | Backtick (`` ` ``) | Jump to the beginning; playing stays playing, paused stays paused |
-| Left / Right Arrow | Seek backward / forward 2 seconds |
+| Left / Right Arrow | Seek backward / forward 0.5 seconds |
 | Shift + Left / Right Arrow | Seek backward / forward 5 seconds |
 | Shift + 1–9 | Save current position to a cue |
 | 1–9 | Jump to a cue |
-| `[` / `]` | Move backward / forward 0.5 seconds while paused |
+| `[` / `]` | Move backward / forward 2 seconds while paused |
 | `-` / `=` | Decrease / increase speed through the available settings |
 
 Shortcuts work across the app except while typing in cue names or lyrics search fields. Names save as you type; press Enter or Escape to leave the name field. Holding an arrow repeats seeking. Holding Space does not repeatedly toggle playback. Seeks stop at the start and end of the song.
@@ -91,8 +91,8 @@ Run this workflow in Chrome and Edge:
 2. Press Space to play. Around 20 seconds, press Shift+1.
 3. Continue listening, then press 1. Confirm an immediate return to the cue with playback continuing.
 4. Set Cue 2 elsewhere with Shift+2. Press 1 and 2 repeatedly to jump between sections.
-5. Press Left Arrow repeatedly: each press moves the position backward 2 seconds (the clock also continues advancing while playing).
-6. Pause. Press `[` and `]` to adjust by 0.5 seconds, then set a cue at the adjusted position.
+5. Press Left Arrow repeatedly: each press moves the position backward 0.5 seconds (the clock also continues advancing while playing).
+6. Pause. Press `[` and `]` to adjust by 2 seconds, then set a cue at the adjusted position.
 7. Name the cue, reload the page, and reopen the same filename. Confirm timestamps and names return.
 8. While paused, jump between cues and confirm playback remains paused.
 9. Check a cue at zero, resetting a cue, seeking at track boundaries, changing speeds, and typing shortcut characters into a cue name.
@@ -185,3 +185,5 @@ Open **Audio input / output**, connect your USB-C microphone and headphones, the
 Selections are remembered on this browser. Recording requests the selected microphone explicitly and fails if it is unavailable, rather than silently using another input. Device lists refresh on connection changes; input/output changes are locked during recording and loop playback. If a selected output cannot be opened, choose another output or System default before recording. **Allow output device** is offered where the browser supports a permission picker. Output selection affects loop playback, the count-in and the test tone; the Practice player keeps the system output.
 
 A PWA can only select devices exposed by the browser and OS. If output selection is unsupported, the control stays on **System default** and the app explains how to use Android's output selection. A USB-C microphone plus Bluetooth headphones must still be verified on the physical phone. Browser tests cover explicit input constraints, microphone-test cleanup, output tones, missing-device failures, preference restoration and existing looper workflows; they cannot verify Android's hardware routing.
+
+Practice volume: desktop has a horizontal fader and speaker/mute button next to speed. On mobile, the speaker button opens a vertical fader with Mute; tap outside or press Escape to close. Volume and the previous nonzero mute level are remembered across sessions and song changes. The fader uses a squared taper and only affects the Practice player. Arrow keys seek 0.5 seconds; Shift+arrows retain 5 seconds; [ and ] seek 2 seconds while paused.

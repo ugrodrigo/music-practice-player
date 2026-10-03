@@ -61,7 +61,13 @@
           <button id="play" class="button button-primary" type="button" disabled><span id="play-icon" aria-hidden="true">▶</span> <span id="play-label">Play</span><kbd>Space</kbd></button>
           <button id="forward" class="button button-subtle" type="button" disabled aria-label="Seek forward 0.5 seconds"><span>0.5s</span> ↷</button>
         </div>
+        <div class="practice-level-controls">
+        <div class="practice-volume" id="practice-volume">
+          <button id="volume-toggle" type="button" aria-label="Mute practice audio" title="Mute practice audio"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z" fill="currentColor"/><path class="volume-waves" d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="volume-cross" d="m16 9 5 6m0-6-5 6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+          <div id="volume-panel"><output id="volume-value" for="practice-volume-slider">100%</output><input id="practice-volume-slider" type="range" min="0" max="100" step="1" value="100" aria-label="Practice volume" aria-valuetext="100%"><button id="volume-mute" type="button">Mute</button></div>
+        </div>
         <div class="speed-control"><label for="speed">Playback speed</label><select id="speed" disabled><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="0.9">0.9×</option><option value="1" selected>1.0×</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option></select></div>
+        </div>
       </div>
       </div>
       <p id="status" class="status" role="status" aria-live="polite">Ready when you are. Your audio stays on this device.</p>
@@ -136,7 +142,7 @@
     <footer class="shortcuts panel" aria-label="Keyboard shortcuts">
       <p class="eyebrow">KEEP YOUR HANDS ON THE MUSIC</p>
       <div class="shortcut-grid">
-        <span><kbd>Space</kbd> Play / pause</span><span><kbd>`</kbd> Go to beginning</span><span><kbd>←</kbd> <kbd>→</kbd> Seek 2s</span><span><kbd>Shift</kbd> + <kbd>←</kbd> <kbd>→</kbd> Seek 5s</span><span><kbd>[</kbd> <kbd>]</kbd> Nudge 0.5s when paused</span><span><kbd>−</kbd> <kbd>=</kbd> Change speed</span>
+        <span><kbd>Space</kbd> Play / pause</span><span><kbd>`</kbd> Go to beginning</span><span><kbd>←</kbd> <kbd>→</kbd> Seek 0.5s</span><span><kbd>Shift</kbd> + <kbd>←</kbd> <kbd>→</kbd> Seek 5s</span><span><kbd>[</kbd> <kbd>]</kbd> Nudge 2s when paused</span><span><kbd>−</kbd> <kbd>=</kbd> Change speed</span>
       </div>
       <p class="shortcut-note">Shortcuts pause while typing in cue names or lyrics search fields. Press Enter or Escape to finish editing a cue name.</p>
     </footer>
