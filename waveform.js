@@ -14,8 +14,8 @@ window.Waveform = (() => {
   const yieldToUI = () => new Promise((resolve) => setTimeout(resolve, 0));
 
   function view() {
-    const span = Number(zoom.value);
-    return span ? { start: progress * trackDuration - span / 2, span } : { start: 0, span: trackDuration };
+    const span = Number(zoom.value) || trackDuration;
+    return { start: progress * trackDuration - span / 2, span };
   }
 
   function paint(target, start, span, width, height) {
@@ -61,7 +61,8 @@ window.Waveform = (() => {
     if (!peaks) return;
     const ratio = height / 150;
     const mainHeight = 104 * ratio, overviewTop = 120 * ratio;
-    const current = dragView || view();
+    // Freeze the seek mapping during a gesture, but always render around playback.
+    const current = view();
     paint(context, current.start, current.span, width, mainHeight);
     const tick = current.span <= 10 ? 2 : current.span <= 30 ? 5 : Math.max(10, Math.ceil(current.span / 6 / 10) * 10);
     context.font = `${10 * ratio}px Segoe UI`;
@@ -77,7 +78,7 @@ window.Waveform = (() => {
     context.fillRect(viewStart / trackDuration * width, overviewTop, (viewEnd - viewStart) / trackDuration * width, height - overviewTop);
     context.strokeStyle = '#d8ee9680';
     context.strokeRect(viewStart / trackDuration * width, overviewTop, (viewEnd - viewStart) / trackDuration * width, height - overviewTop - 1);
-    const playhead = (progress * trackDuration - current.start) / current.span * width;
+    const playhead = width / 2 - 1;
     context.fillStyle = '#f0f8db';
     context.fillRect(Math.max(0, Math.min(width - 2, playhead)), 0, 2, mainHeight);
     context.fillRect(Math.min(width - 2, width * progress), overviewTop, 2, height - overviewTop);

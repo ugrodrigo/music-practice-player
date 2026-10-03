@@ -264,6 +264,33 @@ try:
     print(cdp.js("check(document.getElementById('looper-count-in').value==='0'&&document.getElementById('looper-bpm').value==='120','Old count-in resets to Off while BPM survives');document.getElementById('looper-count-in').value='8';document.getElementById('looper-count-in').dispatchEvent(new Event('change'));"),flush=True)
     cdp.call('Page.reload');time.sleep(.5);cdp.js(helpers)
     print(cdp.js("check(document.getElementById('looper-count-in').value==='8','Explicit count-in choice survives later reloads')"),flush=True)
+    cdp.call('Emulation.setDeviceMetricsOverride',{'width':1366,'height':1000,'deviceScaleFactor':1,'mobile':False})
+    print(cdp.js(r'''(async()=>{
+      document.getElementById('mode-practice').click();await loadTestFile('centered-waveform.wav');
+      await waitFor(()=>!document.getElementById('waveform-zoom').disabled);
+      window.wave=document.getElementById('waveform');wave.scrollIntoView({block:'center'});
+      const ctx=wave.getContext('2d'),fill=ctx.fillRect;
+      window.mainHeads=[];
+      ctx.fillRect=function(x,y,w,h){if(this.fillStyle==='#f0f8db'&&y===0&&w===2)mainHeads.push(x);return fill.call(this,x,y,w,h);};
+      window.checkHead=async()=>{await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));check(mainHeads.length>0&&mainHeads.every(x=>Math.abs(x-(wave.width/2-1))<.01),'Main playhead remains centered');mainHeads=[];};
+      testAudio.pause();testAudio.currentTime=20;Waveform.update(20,65);await checkHead();
+      return 'PASS: centered waveform setup';
+    })()'''),flush=True)
+    rect=cdp.js("(()=>{const r=wave.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};})()")
+    for overview in [False,True]:
+        y=rect['y']+rect['h']*(.9 if overview else .3)
+        for kind,fraction in [('mousePressed',.25),('mouseMoved',.65),('mouseReleased',.65)]:
+            cdp.call('Input.dispatchMouseEvent',{'type':kind,'x':rect['x']+rect['w']*fraction,'y':y,'button':'left','buttons':0 if kind=='mouseReleased' else 1,'clickCount':1})
+            if kind!='mouseReleased':cdp.js('checkHead()')
+        print(cdp.js("check(testAudio.paused,'Seeking preserves paused state')"),flush=True)
+    print(cdp.js(r'''(async()=>{
+      const zoom=document.getElementById('waveform-zoom');zoom.value='0';zoom.dispatchEvent(new Event('change'));
+      await checkHead();testAudio.currentTime=0;Waveform.update(0,65);await checkHead();
+      testAudio.currentTime=65;Waveform.update(65,65);await checkHead();
+      testAudio.currentTime=20;await testAudio.play();await new Promise(r=>setTimeout(r,150));await checkHead();testAudio.pause();
+      return 'PASS: centered main playhead during main/overview drags, track boundaries, full zoom and playback';
+    })()'''),flush=True)
+    assert not cdp.errors,cdp.errors
     cdp.call('Browser.close')
     server.shutdown()
 
