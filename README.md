@@ -8,6 +8,12 @@ Open `index.html` directly in Chrome or Edge. No installation, server, or build 
 
 Drag an audio file anywhere onto the page, or click **Open audio file**. MP3, WAV, M4A, and other browser-supported audio formats are accepted; actual playback depends on the codec supported by your browser. Your audio stays on your device and is never uploaded.
 
+## Preview local edits without PWA caching
+
+Stop the old Python server with Ctrl+C, then run `python preview.py` from the project folder. Open **http://localhost:8766/__preview__/** exactly (including the path). Refresh normally after editing files. The preview uses no-store responses and does not register a service worker; the separate URL path avoids the existing app-shell cache without clearing cues, recordings, or audio storage. The server stays on localhost and supports the experimental AudioWorklet engine. Use `python preview.py --port 8767` if another process needs port 8766. A different port has separate browser storage.
+
+This preview deliberately does not test installation or offline app-shell behavior. Use an ordinary HTTP server or the hosted HTTPS app to test the PWA. The normal update button now reloads a stale page even if another tab already activated its waiting worker, shows a visible recording/unsaved-data blocker, and offers retry feedback if activation does not finish. `python tests/pwa_update_smoke.py` checks these update paths and verifies that preview refreshes load edited scripts under an existing root-scope service worker without deleting local data.
+
 ## Install on Android and use offline
 
 The same app can be installed as a Progressive Web App (PWA). On phones, **Lyrics** is the first tab and opens by default; **Cues** is second. **Open audio file** is beside the Lyrics and Edit cues tabs; Install app sits beside the title. The Lyrics tab hides the waveform/track block to give the lyrics more reading space. Playback controls stay at the bottom, and the waveform starts expanded on the Cues tab; **Hide waveform** collapses it. Tap a timed lyric to seek, then tap an empty numbered cue button to save that timestamp. Eight numbered cue buttons are always visible: tap an empty slot to save, tap a filled slot to jump, or hold to overwrite. Filling all eight slots opens the next page; Previous/Next navigate saved pages. Saving uses the selected lyric timestamp even during playback. Tap a saved cue button to jump; hold it for about two-thirds of a second to overwrite that cue using the selected lyric timestamp, or the playback position captured when you started holding. The cue name is preserved. Moving your finger or cancelling the touch cancels the overwrite. **Cues** opens naming, replacement, and deletion controls. Additional pages are created as needed, and existing saved cues (including cue 9 from earlier versions) are retained. Keyboard shortcuts 1-9 still address the first nine cues. Plain lyrics use the current playback position.
@@ -189,3 +195,15 @@ A PWA can only select devices exposed by the browser and OS. If output selection
 Practice volume: desktop has a horizontal fader and speaker/mute button next to speed. On mobile, the speaker button opens a vertical fader with Mute; tap outside or press Escape to close. Volume and the previous nonzero mute level are remembered across sessions and song changes. The fader uses a squared taper and only affects the Practice player. Arrow keys seek 0.5 seconds; Shift+arrows retain 5 seconds; [ and ] seek 2 seconds while paused.
 
 The Practice main waveform keeps its playhead centered during playback and click/drag seeking, including navigation through the bottom overview. The overview remains a stationary map of the track. The Full track zoom uses a track-length window centered on the playhead, with empty space beyond the track boundaries.
+
+## Practice playback
+
+Practice uses Signalsmith automatically, including restored songs. Press Play to prepare the audio on first playback. Cues, lyrics and waveform timestamps use the original recording's timeline at every speed.
+
+The official Signalsmith Stretch Web 1.3.2 WASM/AudioWorklet engine is bundled locally under its MIT license. See [vendor provenance](vendor/signalsmith/PROVENANCE.md), [license](vendor/signalsmith/LICENSE.txt), and [upstream documentation](vendor/signalsmith/UPSTREAM.md). No audio is uploaded; the engine is included in the offline cache. Playback requires HTTPS or localhost with AudioWorklet support.
+
+To bound mobile memory use, playback accepts mono/stereo songs up to 10 minutes, 50 MB encoded, and 128 MB decoded PCM. Preparation or processor failures show an error; press Play to retry. Replacing a song cancels stale preparation and closes its audio context. Looper audio is unaffected.
+
+Browser checks exercise the real engine offline, verify audible output with a 220 Hz tone remaining at 220 Hz at half speed, seeking and keyboard cues, speed and volume changes, ending, mode isolation, failure recovery and track replacement. Listening quality, battery use and performance on physical Android still require device testing.
+
+Main waveform drags scrub relative to the position where the gesture began: right rewinds and left advances, without jumping when the pointer first goes down. A click without dragging still seeks to the clicked time, and the bottom overview keeps absolute seeking. Numbered cue shortcuts also work while the volume control or playback selectors have focus; text-entry fields remain excluded.

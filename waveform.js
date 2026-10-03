@@ -10,7 +10,7 @@ window.Waveform = (() => {
   const ink = image.getContext('2d');
   let peaks = null, progress = 0, revision = 0, frame = 0, pointer = null;
   let jobs = Promise.resolve();
-  let trackDuration = 0, scale = 1, dragView = null;
+  let trackDuration = 0, scale = 1, dragView = null, dragOrigin = null;
   const yieldToUI = () => new Promise((resolve) => setTimeout(resolve, 0));
 
   function view() {
@@ -101,7 +101,7 @@ window.Waveform = (() => {
   function reset() {
     revision++;
     peaks = null; progress = 0;
-    trackDuration = 0; dragView = null; zoom.disabled = true;
+    trackDuration = 0; dragView = null; dragOrigin = null; zoom.disabled = true;
     if (pointer !== null && canvas.hasPointerCapture(pointer)) canvas.releasePointerCapture(pointer);
     pointer = null;
     wrap.hidden = true;
@@ -182,31 +182,44 @@ window.Waveform = (() => {
     });
   }
 
-  function seek(event) {
+  function seek(event, click = false) {
     if (!peaks) return;
     const bounds = canvas.getBoundingClientRect();
     if (!bounds.width) return;
     const fraction = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
     const current = dragView || view();
-    canvas.dispatchEvent(new CustomEvent('waveformseek', { detail: Math.max(0, Math.min(1, (current.start + fraction * current.span) / trackDuration)) }));
+    let time = current.start + fraction * current.span;
+    if (dragOrigin && !dragOrigin.overview && !click) {
+      const delta = event.clientX - dragOrigin.x;
+      if (!dragOrigin.moved && Math.abs(delta) < 3) return;
+      dragOrigin.moved = true;
+      time = dragOrigin.time - delta / bounds.width * current.span;
+    }
+    canvas.dispatchEvent(new CustomEvent('waveformseek', { detail: Math.max(0, Math.min(1, time / trackDuration)) }));
   }
   canvas.addEventListener('pointerdown', (event) => {
     if (!peaks || !event.isPrimary || event.button !== 0) return;
+    canvas.focus({ preventScroll: true });
+    event.preventDefault();
     pointer = event.pointerId;
     const bounds = canvas.getBoundingClientRect();
-    dragView = event.clientY - bounds.top >= bounds.height * .8 ? { start: 0, span: trackDuration } : view();
+    const overview = event.clientY - bounds.top >= bounds.height * .8;
+    dragOrigin = { x: event.clientX, time: progress * trackDuration, overview, moved: false };
+    dragView = overview ? { start: 0, span: trackDuration } : view();
     canvas.setPointerCapture(pointer);
-    seek(event);
+    if (overview) seek(event);
+    else scheduleDraw();
   });
   canvas.addEventListener('pointermove', (event) => { if (pointer === event.pointerId) seek(event); });
   canvas.addEventListener('pointerup', (event) => {
     if (pointer !== event.pointerId) return;
-    seek(event);
+    seek(event, !dragOrigin?.moved);
     pointer = null;
+    dragOrigin = null;
     dragView = null; scheduleDraw();
     if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
   });
-  for (const event of ['pointercancel', 'lostpointercapture']) canvas.addEventListener(event, () => { pointer = null; dragView = null; scheduleDraw(); });
+  for (const event of ['pointercancel', 'lostpointercapture']) canvas.addEventListener(event, () => { pointer = null; dragView = null; dragOrigin = null; scheduleDraw(); });
   zoom.addEventListener('change', scheduleDraw);
   new ResizeObserver(resize).observe(canvas);
   return { reset, load, update };

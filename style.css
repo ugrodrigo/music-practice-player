@@ -396,3 +396,5 @@ body[data-app-mode="looper"] .practice-content, body[data-app-mode="looper"] .sh
   .practice-level-controls { justify-content: flex-start; }
   .practice-level-controls .speed-control { flex: 0 0 76px; }
 }
+
+#playback-engine-status { font-size: 12px; color: var(--muted); text-align: center; margin: 6px 0; overflow-wrap: anywhere; }

@@ -4,6 +4,9 @@
   const status = document.getElementById('offline-status');
   const install = document.getElementById('install-app');
   const update = document.getElementById('update-app');
+  const updateStatus = document.getElementById('update-status');
+  const localPreview = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) && location.pathname.startsWith('/__preview__/');
+  let updateTimer = 0, reloadStarted = false;
   let installPrompt = null, registration = null, reloadForUpdate = false, cached = false;
 
   function renderStatus() {
@@ -28,6 +31,7 @@
 
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
+    if (localPreview) return;
     installPrompt = event;
     install.hidden = false;
   });
@@ -40,11 +44,43 @@
     catch { status.textContent = 'Use your browser menu to install this app.'; }
   });
   window.addEventListener('appinstalled', () => { installPrompt = null; install.hidden = true; });
-  update.addEventListener('click', () => {
-    if (!registration?.waiting) return;
-    if (window.looperBusy) { document.getElementById('looper-status').textContent = 'Stop recording and wait for saving before updating.'; return; }
+  function reloadUpdatedApp() {
+    if (reloadStarted) return;
+    clearTimeout(updateTimer);
+    if (window.looperBusy) {
+      reloadForUpdate = false; update.disabled = false; update.hidden = false;
+      update.textContent = 'Update & reload';
+      updateStatus.textContent = 'Finish recording or download/save the unsaved take before reloading.';
+      return;
+    }
+    reloadStarted = true;
+    location.reload();
+  }
+  update.addEventListener('click', async () => {
+    if (window.looperBusy) {
+      updateStatus.textContent = 'Finish recording or download/save the unsaved take before updating.';
+      return;
+    }
+    update.disabled = true; update.textContent = 'Updating...'; updateStatus.textContent = '';
     reloadForUpdate = true;
-    registration.waiting.postMessage({ type: 'ACTIVATE_UPDATE' });
+    try {
+      registration = await navigator.serviceWorker.getRegistration(new URL('./', location.href).href);
+      const worker = registration?.waiting;
+      // Another tab may already have activated the update. The visible button
+      // must still reload this older page instead of silently doing nothing.
+      if (!worker || worker.state === 'activated') { reloadUpdatedApp(); return; }
+      worker.addEventListener('statechange', () => {
+        if (worker.state === 'activated' && reloadForUpdate) reloadUpdatedApp();
+      });
+      updateTimer = setTimeout(() => {
+        reloadForUpdate = false; update.disabled = false; update.textContent = 'Retry update';
+        updateStatus.textContent = 'The update did not finish. Close other app tabs, then retry.';
+      }, 8000);
+      worker.postMessage({ type: 'ACTIVATE_UPDATE' });
+    } catch {
+      clearTimeout(updateTimer); reloadForUpdate = false; update.disabled = false; update.textContent = 'Retry update';
+      updateStatus.textContent = 'Could not activate the update. Reload this page and try again.';
+    }
   });
 
   for (const panel of ['cues', 'lyrics']) {
@@ -105,6 +141,11 @@
   window.visualViewport?.addEventListener('scroll', scheduleLayout);
   scheduleLayout();
 
+  if (localPreview) {
+    install.hidden = update.hidden = true;
+    status.textContent = 'Local preview: files load directly from disk. Refresh to see edits.';
+    return;
+  }
   if (location.protocol === 'file:') {
     status.textContent = 'Local file mode · open the HTTPS website on Android to install';
     return;
@@ -114,8 +155,8 @@
     return;
   }
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (reloadForUpdate) location.reload();
-    else checkOffline();
+    if (reloadForUpdate) reloadUpdatedApp();
+    else { update.hidden = !registration?.waiting; checkOffline(); }
   });
   window.addEventListener('online', () => { renderStatus(); checkOffline(); });
   window.addEventListener('offline', () => { renderStatus(); checkOffline(); });
@@ -124,13 +165,15 @@
     registration = value;
     const showUpdate = () => { update.hidden = !registration.waiting; };
     showUpdate();
-    registration.addEventListener('updatefound', () => {
+    const watchInstalling = () => {
       const worker = registration.installing;
       worker?.addEventListener('statechange', () => {
-        if (worker.state === 'installed') showUpdate();
+        if (worker.state === 'installed') setTimeout(showUpdate, 0);
         if (worker.state === 'redundant' && !cached) status.textContent = 'Could not save the app offline. Reconnect and reload to retry.';
       });
-    });
+    };
+    registration.addEventListener('updatefound', watchInstalling);
+    watchInstalling();
     await navigator.serviceWorker.ready;
     checkOffline();
   }).catch(() => { status.textContent = 'Could not enable offline access. Reconnect and reload to retry.'; });

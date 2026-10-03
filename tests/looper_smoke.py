@@ -63,7 +63,7 @@ try:
     cdp = CDP(next(p['webSocketDebuggerUrl'] for p in pages if p['type'] == 'page'))
     cdp.call('Runtime.enable')
     cdp.call('Page.enable')
-    cdp.call('Page.addScriptToEvaluateOnNewDocument', {'source': 'window.OriginalAudio = Audio; window.Audio = function(...args) { const a = new OriginalAudio(...args); window.testAudio = a; return a; };'})
+    cdp.call('Page.addScriptToEvaluateOnNewDocument', {'source': 'Object.defineProperty(window,"PracticeAudio",{configurable:true,get(){return this._testPracticeAudio;},set(Class){this._testPracticeAudio=class extends Class{constructor(...args){super(...args);window.testAudio=this;}};}});'})
     cdp.call('Emulation.setDeviceMetricsOverride', {'width': 1440, 'height': 1150, 'deviceScaleFactor': 1, 'mobile': False})
     cdp.call('Page.navigate', {'url': (ROOT / 'index.html').as_uri()})
     time.sleep(.6)
@@ -93,9 +93,10 @@ try:
     stage=Path(tempfile.mkdtemp(prefix='mpp-pwa-site-'))
     site=stage/'music-practice-player'
     site.mkdir()
-    for name in ['index.html','style.css','app.js','audio-store.js','lyrics.js','waveform.js','pwa.js','recording-folder.js','looper-store.js','looper.js','looper-io.js','sw.js','manifest.webmanifest']:
+    for name in ['index.html','style.css','app.js','practice-audio.js','audio-store.js','lyrics.js','waveform.js','pwa.js','recording-folder.js','looper-store.js','looper.js','looper-io.js','sw.js','manifest.webmanifest']:
         shutil.copy2(ROOT/name,site/name)
     shutil.copytree(ROOT/'icons',site/'icons')
+    shutil.copytree(ROOT/'vendor',site/'vendor')
     class QuietHandler(SimpleHTTPRequestHandler):
         def log_message(self,*args): pass
     server=ThreadingHTTPServer(('127.0.0.1',0),partial(QuietHandler,directory=str(stage)))
@@ -279,16 +280,76 @@ try:
     rect=cdp.js("(()=>{const r=wave.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};})()")
     for overview in [False,True]:
         y=rect['y']+rect['h']*(.9 if overview else .3)
-        for kind,fraction in [('mousePressed',.25),('mouseMoved',.65),('mouseReleased',.65)]:
+        cdp.js("document.activeElement?.blur();key('1','Digit1',true);window.dragStartTime=testAudio.currentTime;document.querySelector('#cues input').focus()")
+        gestures=[('mousePressed',.25),('mouseMoved',.65),('mouseReleased',.65)] if overview else [('mousePressed',.25),('mouseMoved',.65),('mouseMoved',.15),('mouseReleased',.15)]
+        for kind,fraction in gestures:
             cdp.call('Input.dispatchMouseEvent',{'type':kind,'x':rect['x']+rect['w']*fraction,'y':y,'button':'left','buttons':0 if kind=='mouseReleased' else 1,'clickCount':1})
             if kind!='mouseReleased':cdp.js('checkHead()')
+            if not overview:
+                expected=0 if kind=='mousePressed' else (.25-fraction)*30
+                # Main waveform starts with its default 30-second span.
+                print(cdp.js(f"check(Math.abs(testAudio.currentTime-Math.max(0,Math.min(65,dragStartTime+{expected})))<.05,'Main scrub rewinds right and advances left without an initial jump')"),flush=True)
         print(cdp.js("check(testAudio.paused,'Seeking preserves paused state')"),flush=True)
+        cdp.call('Input.dispatchKeyEvent',{'type':'keyDown','key':'1','code':'Digit1','windowsVirtualKeyCode':49})
+        cdp.call('Input.dispatchKeyEvent',{'type':'keyUp','key':'1','code':'Digit1','windowsVirtualKeyCode':49})
+        print(cdp.js("check(document.activeElement===wave,'Waveform takes focus from cue name');check(Math.abs(testAudio.currentTime-dragStartTime)<.05,'Real keyboard cue works after waveform drag')"),flush=True)
     print(cdp.js(r'''(async()=>{
       const zoom=document.getElementById('waveform-zoom');zoom.value='0';zoom.dispatchEvent(new Event('change'));
       await checkHead();testAudio.currentTime=0;Waveform.update(0,65);await checkHead();
       testAudio.currentTime=65;Waveform.update(65,65);await checkHead();
       testAudio.currentTime=20;await testAudio.play();await new Promise(r=>setTimeout(r,150));await checkHead();testAudio.pause();
       return 'PASS: centered main playhead during main/overview drags, track boundaries, full zoom and playback';
+    })()'''),flush=True)
+    assert not cdp.errors,cdp.errors
+    print(cdp.js(r'''(async()=>{
+      const el=id=>document.getElementById(id),wait=async predicate=>{for(let i=0;i<600;i++){if(predicate())return;await new Promise(r=>setTimeout(r,25));}throw Error('Stretch timeout: '+el('playback-engine-status').textContent);};
+      const speed=el('speed'),seek=el('seek');
+      check(!el('stretch-engine'),'Engine selector removed');
+      speed.value='0.5';speed.dispatchEvent(new Event('change'));
+      seek.value='10';seek.dispatchEvent(new Event('input'));
+      await testAudio.play();
+      check(testAudio.node&&testAudio.native.paused,'Signalsmith is the sole playback engine');
+      const stretchGain=testAudio.gain;
+      const analyser=stretchGain.context.createAnalyser();analyser.fftSize=8192;stretchGain.connect(analyser);
+      await new Promise(r=>setTimeout(r,700));
+      check(!testAudio.paused&&el('play-label').textContent==='Pause','Signalsmith is playing');
+      check(Number(seek.value)>10.2&&Number(seek.value)<10.6,'Half-speed original timeline advances accurately');
+      const samples=new Float32Array(analyser.fftSize);analyser.getFloatTimeDomainData(samples);
+      let crosses=0,power=0;for(let i=1;i<samples.length;i++){if(samples[i-1]<=0&&samples[i]>0)crosses++;power+=samples[i]*samples[i];}
+      const frequency=crosses*stretchGain.context.sampleRate/samples.length;
+      check(Math.sqrt(power/samples.length)>.0001&&Math.abs(frequency-220)<12,'WASM output is audible and preserves 220Hz pitch at half speed: '+frequency);
+      const slider=el('practice-volume-slider');slider.value='30';slider.dispatchEvent(new Event('input'));await new Promise(r=>setTimeout(r,60));
+      check(Math.abs(stretchGain.gain.value-.09)<.01,'Volume controls experimental output');
+      seek.value='30';seek.dispatchEvent(new Event('input'));await new Promise(r=>setTimeout(r,100));check(Math.abs(Number(seek.value)-30)<.15,'Seek stays in original song time');
+      el('play').click();const paused=Number(seek.value);await new Promise(r=>setTimeout(r,150));check(Number(seek.value)===paused,'Experimental pause freezes position');
+      document.activeElement?.blur();key('1','Digit1',true);seek.value='40';seek.dispatchEvent(new Event('input'));key('1','Digit1');check(Math.abs(Number(seek.value)-paused)<.01,'Cues preserve original timestamps');
+      for(const id of ['practice-volume-slider','volume-toggle','speed']){
+        seek.value='40';seek.dispatchEvent(new Event('input'));el(id).focus();key('1','Digit1');
+        check(Math.abs(Number(seek.value)-paused)<.01,'Number cue works with focused '+id);
+      }
+      el('practice-volume-slider').focus();seek.value='25';seek.dispatchEvent(new Event('input'));key('@','Digit2',true);
+      seek.value='40';seek.dispatchEvent(new Event('input'));key('2','Numpad2');check(Number(seek.value)===25,'Shift-number saving and numpad cues work from volume');
+      const name=document.querySelector('#cues input');name.focus();key('1','Digit1');check(Number(seek.value)===25,'Typing in cue names does not jump');name.blur();
+      seek.value=String(paused);seek.dispatchEvent(new Event('input'));
+
+      await testAudio.play();
+      speed.value='0.75';speed.dispatchEvent(new Event('change'));const before=Number(seek.value);await new Promise(r=>setTimeout(r,400));check(Number(seek.value)-before>.2&&Number(seek.value)-before<.45,'Rate changes follow original timeline');
+      document.getElementById('mode-looper').click();check(el('play-label').textContent==='Play','Looper stops experimental practice');document.getElementById('mode-practice').click();
+      seek.value='64.5';seek.dispatchEvent(new Event('input'));el('play').click();await wait(()=>el('play-label').textContent==='Pause');await wait(()=>el('play-label').textContent==='Play');check(Number(seek.value)>=64.99,'Experimental end of track stops');
+      await loadTestFile('stretch-retry.wav');
+      const factory=window.SignalsmithStretch;window.SignalsmithStretch=async()=>{throw Error('Simulated engine failure');};
+      el('play').click();await wait(()=>el('playback-engine-status').textContent.includes('Simulated'));
+      check(testAudio.paused&&testAudio.native.paused&&!el('play').disabled,'Initialization failure offers retry without native fallback');
+      window.SignalsmithStretch=factory;el('play').click();await wait(()=>!testAudio.paused);
+      check(!!testAudio.node,'Retry uses Signalsmith');
+      testAudio.node.dispatchEvent(new Event('processorerror'));
+      check(testAudio.paused&&el('playback-engine-status').textContent.includes('retry'),'Processor failure pauses with feedback');
+      el('play').click();await wait(()=>!testAudio.paused);testAudio.pause();
+      await loadTestFile('slow-prepare.wav');
+      const decode=AudioContext.prototype.decodeAudioData;AudioContext.prototype.decodeAudioData=async function(data){const result=await decode.call(this,data);await new Promise(r=>setTimeout(r,300));return result;};
+      const previous=testAudio;el('play').click();await loadTestFile('replacement-during-stretch.wav');await new Promise(r=>setTimeout(r,600));
+      check(previous.disposed&&!previous.context&&testAudio.paused&&!testAudio.node,'Replacing song cancels stale preparation');AudioContext.prototype.decodeAudioData=decode;
+      return 'PASS: default Signalsmith WASM sound and pitch, original-time seek/cues/rate, volume, mode isolation, end, retry and stale-load cancellation';
     })()'''),flush=True)
     assert not cdp.errors,cdp.errors
     cdp.call('Browser.close')

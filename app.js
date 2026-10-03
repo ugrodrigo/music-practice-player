@@ -391,7 +391,11 @@
     try {
       await current.play();
     } catch (error) {
-      if (current === audio && error.name !== "AbortError") announce("Playback could not start. Try opening the file again.", true);
+      if (current === audio && error.name !== "AbortError") {
+        const message = error.message || 'Playback could not start. Press Play to retry.';
+        $('playback-engine-status').textContent = message; $('playback-engine-status').hidden = false;
+        announce(message, true);
+      }
     }
   }
 
@@ -436,7 +440,9 @@
     activeFile = file;
     memoryRevision++;
     const previous = audio;
-    const current = new Audio();
+    const current = new PracticeAudio(new Audio(), file);
+    $("playback-engine-status").textContent = "";
+    $("playback-engine-status").hidden = true;
     audio = current; // Events and play promises from a replaced file must not update this track.
     if (previous) {
       previous.pause();
@@ -487,6 +493,16 @@
       setReady(false);
       announce("This audio file could not be played. Try another file or a different audio format.", true);
     });
+    current.addEventListener('enginestatus', event => {
+      if (current !== audio) return;
+      $('playback-engine-status').textContent = event.detail;
+      $('playback-engine-status').hidden = !event.detail;
+    });
+    current.addEventListener('engineerror', event => {
+      if (current !== audio) return;
+      $('playback-engine-status').textContent = event.detail;
+      $('playback-engine-status').hidden = false; renderPlayback();
+    });
     current.src = objectURL;
     current.load();
   }
@@ -518,7 +534,9 @@
     const target = event.target;
     if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey ||
       target.closest('input:not([type="range"]), textarea, [contenteditable]:not([contenteditable="false"])')) return;
-    const digit = /^(?:Digit|Numpad)([1-9])$/.exec(event.code);
+    const digit = /^(?:Digit|Numpad)([1-9])$/.exec(event.code) || /^([1-9])$/.exec(event.key);
+    // Volume owns its arrow/space keys, but numbered cues still work while it is focused.
+    if (target.closest('.practice-volume') && !digit) return;
     const space = event.code === "Space" || event.key === " ";
     const arrow = event.key === "ArrowLeft" || event.key === "ArrowRight";
     const fine = event.key === "[" || event.key === "]";
@@ -543,7 +561,7 @@
       const index = speeds.indexOf(Number(ui.speed.value));
       changeSpeed(speeds[Math.max(0, Math.min(speeds.length - 1, index + (event.key === "-" ? -1 : 1)))]);
     }
-  });
+  }, { capture: true });
 
   const isFileDrag = (event) => Array.from(event.dataTransfer?.types || []).includes("Files");
   const hideDrop = () => { dragDepth = 0; ui["drop-overlay"].hidden = true; };
