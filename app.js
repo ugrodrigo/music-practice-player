@@ -530,7 +530,7 @@
     }
   });
   function renderSpeed() {
-    const value = Number(ui.speed.value), label = `${value.toFixed(2)}?`;
+    const value = Number(ui.speed.value), label = `${value.toFixed(2)}\u00d7`;
     $('speed-toggle').textContent = $('speed-value').textContent = label;
     $('speed-toggle').setAttribute('aria-label', `Playback speed: ${label}`);
     ui.speed.setAttribute('aria-valuetext', label);
@@ -574,7 +574,7 @@
   renderSpeed();
 
   document.addEventListener("keydown", (event) => {
-    if (document.body.dataset.appMode === 'looper') return;
+    if (document.body.dataset.appMode !== 'practice') return;
     const target = event.target;
     if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey ||
       target.closest('input:not([type="range"]), textarea, [contenteditable]:not([contenteditable="false"])')) return;
@@ -615,7 +615,7 @@
   document.addEventListener("dragenter", (event) => {
     if (!isFileDrag(event)) return;
     event.preventDefault();
-    if (document.body.dataset.appMode === 'looper') return;
+    if (document.body.dataset.appMode !== 'practice') return;
     dragDepth++;
     ui["drop-overlay"].hidden = false;
   });

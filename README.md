@@ -207,3 +207,5 @@ To bound mobile memory use, playback accepts mono/stereo songs up to 10 minutes,
 Browser checks exercise the real engine offline, verify audible output with a 220 Hz tone remaining at 220 Hz at half speed, seeking and keyboard cues, speed and volume changes, ending, mode isolation, failure recovery and track replacement. Listening quality, battery use and performance on physical Android still require device testing.
 
 Main waveform drags scrub relative to the position where the gesture began: right rewinds and left advances, without jumping when the pointer first goes down. A click without dragging still seeks to the clicked time, and the bottom overview keeps absolute seeking. Numbered cue shortcuts also work while the volume control or playback selectors have focus; text-entry fields remain excluded.
+
+Settings is a shared header tab beside Practice and Looper. It contains recording-folder, saved-audio, screen-awake, and lyrics-display preferences. Switching to Settings pauses playback; finish an active recording before switching tabs.

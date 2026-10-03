@@ -350,15 +350,17 @@
     } catch { $('library-status').textContent = 'Could not read recordings. Check available browser storage.'; }
   }
   function setMode(mode) {
-    if (mode === 'practice' && busy()) { status('Tap Stop and wait for the recording to finish before switching modes.'); return; }
-    if (mode === 'looper') document.dispatchEvent(new Event('practicepause'));
-    else { io.stopTest(); stopPlayback(); if (dirty) persist(); }
+    if (mode !== 'looper' && busy()) { status('Tap Stop and wait for the recording to finish before switching modes.'); return; }
+    if (mode !== 'practice') document.dispatchEvent(new Event('practicepause'));
+    if (mode !== 'looper') { io.stopTest(); stopPlayback(); if (dirty) persist(); }
     document.body.dataset.appMode = mode; $('panel').hidden = mode !== 'looper';
-    for (const name of ['practice', 'looper']) document.getElementById(`mode-${name}`).setAttribute('aria-pressed', String(name === mode));
+    document.getElementById('lyrics-display-config').hidden = mode !== 'settings';
+    for (const name of ['practice', 'looper', 'settings']) document.getElementById(`mode-${name}`).setAttribute('aria-pressed', String(name === mode));
     document.dispatchEvent(new Event('appmodechange')); render();
   }
   document.getElementById('mode-practice').addEventListener('click', () => setMode('practice'));
   document.getElementById('mode-looper').addEventListener('click', () => setMode('looper'));
+  document.getElementById('mode-settings').addEventListener('click', () => setMode('settings'));
   $('record').addEventListener('click', recordNew);
   $('stop').addEventListener('click', () => { if (['recording', 'requesting', 'counting'].includes(state)) stopRecording(); else { stopPlayback(); status('Loop stopped.'); render(); } });
   $('play').addEventListener('click', () => play()); $('seam').addEventListener('click', () => play(true));

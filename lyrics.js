@@ -53,19 +53,15 @@ window.LyricsPanel = (() => {
   }
 
   function showTab(selection) {
-    const view = selection === 'config' ? 'config' : selection ? 'find' : 'lyrics';
+    const view = selection ? 'find' : 'lyrics';
     document.querySelector('.lyrics').dataset.view = view;
     $('settings').open = view === 'find';
     $('view').setAttribute('aria-pressed', String(view === 'lyrics'));
     $('find').setAttribute('aria-pressed', String(view === 'find'));
-    $('config-toggle').setAttribute('aria-pressed', String(view === 'config'));
-    $('config-toggle').setAttribute('aria-expanded', String(view === 'config'));
-    $('display-config').hidden = view !== 'config';
     requestAnimationFrame(() => update(playbackTime, playbackDuration, true));
   }
   $('view').addEventListener('click', () => showTab(false));
   $('find').addEventListener('click', () => showTab(true));
-  $('config-toggle').addEventListener('click', () => showTab('config'));
 
   function renderFollowMode() {
     $('mode').hidden = hasLyrics && timedLines.length > 0;

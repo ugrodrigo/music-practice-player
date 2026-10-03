@@ -305,11 +305,20 @@ try:
         cdp.call('Emulation.setDeviceMetricsOverride',{'width':width,'height':844,'deviceScaleFactor':1,'mobile':False})
         print(cdp.js(r"""(()=>{
           const el=id=>document.getElementById(id);
+          for (const mode of ['practice','looper']) {
+            el('mode-'+mode).click();el('mode-settings').click();
+            check(document.body.dataset.appMode==='settings'&&!el('lyrics-display-config').hidden,'Shared settings opens from '+mode);
+            check(!document.querySelector('.lyrics').contains(el('lyrics-display-config')),'Settings lives outside Practice');
+            check(el('mode-settings').getBoundingClientRect().right<=innerWidth,'Header settings fits');
+          }
+          el('mode-practice').click();
+          check(el('lyrics-display-config').hidden,'Leaving Settings restores Practice');
           el('speed-toggle').click();
+          check(!el('speed-panel').textContent.includes('?'),'Speed symbols render without question marks');
           const panel=el('speed-panel'),r=panel.getBoundingClientRect();
           check(!panel.hidden&&r.left>=0&&r.right<=innerWidth&&r.top>=0,'Speed panel fits viewport: '+JSON.stringify({hidden:panel.hidden,x:r.x,y:r.y,right:r.right,width:innerWidth}));
           el('speed').value='.6';el('speed').dispatchEvent(new Event('input'));
-          check(testAudio.playbackRate===.6&&el('speed-value').textContent==='0.60?','Fine speed slider');
+          check(testAudio.playbackRate===.6&&el('speed-value').textContent==='0.60\u00d7','Fine speed slider');
           el('speed-plus').click();check(testAudio.playbackRate===.65,'Speed plus increments .05');
           el('speed-minus').click();check(testAudio.playbackRate===.6,'Speed minus decrements .05');
           document.querySelector('[data-speed="1.25"]').click();check(testAudio.playbackRate===1.25,'Speed preset');

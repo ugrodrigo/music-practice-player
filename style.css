@@ -410,3 +410,9 @@ body[data-app-mode="looper"] .practice-content, body[data-app-mode="looper"] .sh
 .speed-slider-row button { flex: 0 0 44px; font-size: 24px; }
 .speed-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
 #speed-panel button[aria-pressed="true"] { background: var(--accent); color: #17200e; }
+
+#mode-settings { display: flex; align-items: center; justify-content: center; gap: 8px; }
+#mode-settings svg { width: 22px; height: 22px; }
+body[data-app-mode="settings"] .practice-content, body[data-app-mode="settings"] .shortcuts, body[data-app-mode="settings"] .mobile-panels { display: none; }
+#lyrics-display-config { padding: 22px; max-width: 760px; width: 100%; margin: 0 auto; overflow: visible; border: 1px solid var(--line); }
+body[data-app-mode="settings"] .workspace { padding-bottom: 24px; }
