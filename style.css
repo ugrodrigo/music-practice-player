@@ -398,3 +398,15 @@ body[data-app-mode="looper"] .practice-content, body[data-app-mode="looper"] .sh
 }
 
 #playback-engine-status { font-size: 12px; color: var(--muted); text-align: center; margin: 6px 0; overflow-wrap: anywhere; }
+
+/* Compact transport button opens precise playback-speed controls. */
+#practice-speed { position: relative; }
+#speed-toggle { width: 100%; min-width: 72px; min-height: 44px; border: 1px solid var(--line); border-radius: 8px; background: #252d26; padding: 8px; white-space: nowrap; }
+#speed-panel { position: fixed; width: min(340px, calc(100vw - 32px)); padding: 16px; border: 1px solid #536342; border-radius: 16px; background: #1a1f1c; box-shadow: 0 8px 30px #0009; z-index: 20; }
+.speed-heading, .speed-slider-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#speed-panel button { min-height: 44px; border: 0; border-radius: 24px; background: #ffffff12; padding: 8px 12px; }
+#speed-value { display: block; text-align: center; font-size: 24px; font-weight: 700; margin: 12px 0; }
+#practice-speed #speed { flex: 1; width: 0; min-width: 0; padding: 0; margin: 0; accent-color: var(--accent); }
+.speed-slider-row button { flex: 0 0 44px; font-size: 24px; }
+.speed-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+#speed-panel button[aria-pressed="true"] { background: var(--accent); color: #17200e; }

@@ -301,6 +301,28 @@ try:
       return 'PASS: centered main playhead during main/overview drags, track boundaries, full zoom and playback';
     })()'''),flush=True)
     assert not cdp.errors,cdp.errors
+    for width in [320,390,760,1366]:
+        cdp.call('Emulation.setDeviceMetricsOverride',{'width':width,'height':844,'deviceScaleFactor':1,'mobile':False})
+        print(cdp.js(r"""(()=>{
+          const el=id=>document.getElementById(id);
+          el('speed-toggle').click();
+          const panel=el('speed-panel'),r=panel.getBoundingClientRect();
+          check(!panel.hidden&&r.left>=0&&r.right<=innerWidth&&r.top>=0,'Speed panel fits viewport: '+JSON.stringify({hidden:panel.hidden,x:r.x,y:r.y,right:r.right,width:innerWidth}));
+          el('speed').value='.6';el('speed').dispatchEvent(new Event('input'));
+          check(testAudio.playbackRate===.6&&el('speed-value').textContent==='0.60?','Fine speed slider');
+          el('speed-plus').click();check(testAudio.playbackRate===.65,'Speed plus increments .05');
+          el('speed-minus').click();check(testAudio.playbackRate===.6,'Speed minus decrements .05');
+          document.querySelector('[data-speed="1.25"]').click();check(testAudio.playbackRate===1.25,'Speed preset');
+          key('-','Minus');check(testAudio.playbackRate===1.2,'Speed shortcut increments .05');
+          key('Escape','Escape');check(panel.hidden,'Escape closes speed panel');
+          el('practice-volume-slider').value='40';el('practice-volume-slider').dispatchEvent(new Event('input'));
+          key('ArrowUp','ArrowUp');check(el('practice-volume-slider').value==='45','Up raises volume 5 percent');
+          key('ArrowDown','ArrowDown');check(el('practice-volume-slider').value==='40','Down lowers volume 5 percent');
+          el('practice-volume-slider').focus();key('ArrowUp','ArrowUp');check(el('practice-volume-slider').value==='45','Focused volume handles shortcut once');
+          el('show-cues').click();const name=document.querySelector('#cues input');name.focus();check(document.activeElement===name,'Cue name is focused');key('ArrowDown','ArrowDown');check(el('practice-volume-slider').value==='45','Text entry does not change volume');name.blur();
+          el('speed').value='1';el('speed').dispatchEvent(new Event('input'));
+          return 'PASS: speed panel layout, fine adjustments, presets, keyboard speed/volume and text-entry protection';
+        })()"""),flush=True)
     print(cdp.js(r'''(async()=>{
       const el=id=>document.getElementById(id),wait=async predicate=>{for(let i=0;i<600;i++){if(predicate())return;await new Promise(r=>setTimeout(r,25));}throw Error('Stretch timeout: '+el('playback-engine-status').textContent);};
       const speed=el('speed'),seek=el('seek');
@@ -324,7 +346,7 @@ try:
       el('play').click();const paused=Number(seek.value);await new Promise(r=>setTimeout(r,150));check(Number(seek.value)===paused,'Experimental pause freezes position');
       document.activeElement?.blur();key('1','Digit1',true);seek.value='40';seek.dispatchEvent(new Event('input'));key('1','Digit1');check(Math.abs(Number(seek.value)-paused)<.01,'Cues preserve original timestamps');
       for(const id of ['practice-volume-slider','volume-toggle','speed']){
-        seek.value='40';seek.dispatchEvent(new Event('input'));el(id).focus();key('1','Digit1');
+        seek.value='40';seek.dispatchEvent(new Event('input'));if(id==='speed')el('speed-toggle').click();el(id).focus();key('1','Digit1');
         check(Math.abs(Number(seek.value)-paused)<.01,'Number cue works with focused '+id);
       }
       el('practice-volume-slider').focus();seek.value='25';seek.dispatchEvent(new Event('input'));key('@','Digit2',true);

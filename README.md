@@ -55,7 +55,7 @@ Waveform analysis runs separately from playback, with no upload or dependencies.
 | Shift + 1–9 | Save current position to a cue |
 | 1–9 | Jump to a cue |
 | `[` / `]` | Move backward / forward 2 seconds while paused |
-| `-` / `=` | Decrease / increase speed through the available settings |
+| `-` / `=` | Decrease / increase speed by 0.05? |
 
 Shortcuts work across the app except while typing in cue names or lyrics search fields. Names save as you type; press Enter or Escape to leave the name field. Holding an arrow repeats seeking. Holding Space does not repeatedly toggle playback. Seeks stop at the start and end of the song.
 
@@ -192,7 +192,7 @@ Selections are remembered on this browser. Recording requests the selected micro
 
 A PWA can only select devices exposed by the browser and OS. If output selection is unsupported, the control stays on **System default** and the app explains how to use Android's output selection. A USB-C microphone plus Bluetooth headphones must still be verified on the physical phone. Browser tests cover explicit input constraints, microphone-test cleanup, output tones, missing-device failures, preference restoration and existing looper workflows; they cannot verify Android's hardware routing.
 
-Practice volume: desktop has a horizontal fader and speaker/mute button next to speed. On mobile, the speaker button opens a vertical fader with Mute; tap outside or press Escape to close. Volume and the previous nonzero mute level are remembered across sessions and song changes. The fader uses a squared taper and only affects the Practice player. Arrow keys seek 0.5 seconds; Shift+arrows retain 5 seconds; [ and ] seek 2 seconds while paused.
+Practice volume: desktop has a horizontal fader and speaker/mute button next to speed. On mobile, the speaker button opens a vertical fader with Mute; tap outside or press Escape to close. Volume and the previous nonzero mute level are remembered across sessions and song changes. The fader uses a squared taper and only affects the Practice player. Up/down arrows change volume by 5 percentage points. Left/right arrows seek 0.5 seconds; Shift+left/right retain 5 seconds; [ and ] seek 2 seconds while paused.
 
 The Practice main waveform keeps its playhead centered during playback and click/drag seeking, including navigation through the bottom overview. The overview remains a stationary map of the track. The Full track zoom uses a track-length window centered on the playhead, with empty space beyond the track boundaries.
 

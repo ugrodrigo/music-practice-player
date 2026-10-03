@@ -2,7 +2,6 @@
 
 (() => {
   const $ = (id) => document.getElementById(id);
-  const speeds = [0.5, 0.75, 0.9, 1, 1.1, 1.25];
   const storagePrefix = "music-practice-player:v1:";
   const ui = Object.fromEntries([
     "open-file", "file-input", "filename", "file-hint", "current-time", "duration",
@@ -372,6 +371,7 @@
     ensureCards();
     for (const id of ["play", "back", "forward", "seek", "speed"]) ui[id].disabled = !value;
     cards.forEach((_, index) => renderCue(index));
+    renderSpeed();
     renderPlayback();
   }
 
@@ -401,8 +401,10 @@
 
   function changeSpeed(value) {
     if (!ready) return;
+    value = Math.max(0.25, Math.min(2, Math.round(value * 20) / 20));
     audio.playbackRate = value;
     ui.speed.value = String(value);
+    renderSpeed();
   }
 
   const rememberAudio = $('remember-audio');
@@ -527,7 +529,49 @@
       renderQuickCues();
     }
   });
+  function renderSpeed() {
+    const value = Number(ui.speed.value), label = `${value.toFixed(2)}?`;
+    $('speed-toggle').textContent = $('speed-value').textContent = label;
+    $('speed-toggle').setAttribute('aria-label', `Playback speed: ${label}`);
+    ui.speed.setAttribute('aria-valuetext', label);
+    $('speed-toggle').disabled = !ready;
+    $('speed-minus').disabled = !ready || value <= .25;
+    $('speed-plus').disabled = !ready || value >= 2;
+    document.querySelectorAll('[data-speed]').forEach(button => {
+      button.disabled = !ready;
+      button.setAttribute('aria-pressed', String(Number(button.dataset.speed) === value));
+    });
+    if (!ready) closeSpeed();
+  }
+  function positionSpeed() {
+    const panel = $('speed-panel');
+    if (panel.hidden) return;
+    const bounds = $('speed-toggle').getBoundingClientRect();
+    panel.style.left = `${Math.max(16, Math.min(innerWidth - panel.offsetWidth - 16, bounds.right - panel.offsetWidth))}px`;
+    panel.style.top = `${Math.max(12, Math.min(innerHeight - panel.offsetHeight - 12, bounds.top - panel.offsetHeight - 12))}px`;
+  }
+  window.addEventListener('resize', positionSpeed);
+  window.addEventListener('scroll', positionSpeed, { passive: true, capture: true });
+  function closeSpeed() { $('speed-panel').hidden = true; $('speed-toggle').setAttribute('aria-expanded', 'false'); }
+  $('speed-toggle').addEventListener('click', () => {
+    const open = $('speed-panel').hidden;
+    closeVolume(); $('speed-panel').hidden = !open;
+    $('speed-toggle').setAttribute('aria-expanded', String(open));
+    if (open) { positionSpeed(); ui.speed.focus({ preventScroll: true }); }
+  });
+  $('speed-close').addEventListener('click', () => { closeSpeed(); $('speed-toggle').focus(); });
+  $('practice-speed').addEventListener('keydown', event => {
+    if (event.key === 'Escape') { closeSpeed(); $('speed-toggle').focus(); event.preventDefault(); }
+  });
+  document.addEventListener('pointerdown', event => { if (!$('practice-speed').contains(event.target)) closeSpeed(); });
+  document.addEventListener('focusin', event => { if (!$('practice-speed').contains(event.target)) closeSpeed(); });
+  document.addEventListener('appmodechange', closeSpeed);
+  $('speed-minus').addEventListener('click', () => changeSpeed(Number(ui.speed.value) - .05));
+  $('speed-plus').addEventListener('click', () => changeSpeed(Number(ui.speed.value) + .05));
+  document.querySelectorAll('[data-speed]').forEach(button => button.addEventListener('click', () => changeSpeed(Number(button.dataset.speed))));
+  ui.speed.addEventListener('input', () => changeSpeed(Number(ui.speed.value)));
   ui.speed.addEventListener("change", () => changeSpeed(Number(ui.speed.value)));
+  renderSpeed();
 
   document.addEventListener("keydown", (event) => {
     if (document.body.dataset.appMode === 'looper') return;
@@ -535,6 +579,10 @@
     if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey ||
       target.closest('input:not([type="range"]), textarea, [contenteditable]:not([contenteditable="false"])')) return;
     const digit = /^(?:Digit|Numpad)([1-9])$/.exec(event.code) || /^([1-9])$/.exec(event.key);
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      event.preventDefault(); setVolume(volume + (event.key === 'ArrowUp' ? 5 : -5)); return;
+    }
+    if (target === ui.speed && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     // Volume owns its arrow/space keys, but numbered cues still work while it is focused.
     if (target.closest('.practice-volume') && !digit) return;
     const space = event.code === "Space" || event.key === " ";
@@ -558,8 +606,7 @@
     } else if (fine) {
       if (audio.paused) seekTo(audio.currentTime + (event.key === "[" ? -2 : 2));
     } else {
-      const index = speeds.indexOf(Number(ui.speed.value));
-      changeSpeed(speeds[Math.max(0, Math.min(speeds.length - 1, index + (event.key === "-" ? -1 : 1)))]);
+      changeSpeed(Number(ui.speed.value) + (event.key === "-" ? -.05 : .05));
     }
   }, { capture: true });
 
