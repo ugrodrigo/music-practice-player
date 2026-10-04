@@ -90,10 +90,11 @@ try:
     from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
     from threading import Thread
     site=Path(tempfile.mkdtemp(prefix='mpp-update-test-'))
-    for name in ['index.html','style.css','app.js','practice-audio.js','audio-store.js','lyrics.js','waveform.js','pwa.js','recording-folder.js','looper-store.js','looper.js','looper-io.js','sw.js','manifest.webmanifest']:
+    for name in ['index.html','sw.js','manifest.webmanifest']:
         shutil.copy2(ROOT/name,site/name)
-    shutil.copytree(ROOT/'icons',site/'icons');shutil.copytree(ROOT/'vendor',site/'vendor')
-    spec=importlib.util.spec_from_file_location('mpp_preview',ROOT/'preview.py')
+    for name in ['src','assets','vendor']:
+        shutil.copytree(ROOT/name,site/name)
+    spec=importlib.util.spec_from_file_location('mpp_preview',ROOT/'scripts/preview.py')
     preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview);preview.ROOT=site
     preview_mode=False
     class Handler(preview.PreviewHandler):
@@ -120,7 +121,7 @@ try:
     print('PASS: stale update button reloads even with no waiting worker',flush=True)
     cdp.js("localStorage.setItem('update-data-check','keep');caches.open('unrelated-cache')")
     page=site/'index.html';page.write_bytes(page.read_bytes().replace(b'<body ',b'<body data-update-test="new" '))
-    worker=site/'sw.js';worker.write_bytes(worker.read_bytes().replace(b"'v36'",b"'test-update-v37'"))
+    worker=site/'sw.js';worker.write_bytes(worker.read_bytes().replace(b"'v37'",b"'test-update-v38'"))
     cdp.js('(async()=>{const r=await navigator.serviceWorker.getRegistration();await r.update();})()')
     for i in range(100):
         if cdp.js("!document.getElementById('update-app').hidden"):break
@@ -132,13 +133,13 @@ try:
     wait_reload(before);cdp.js(helpers)
     print(cdp.js("check(document.body.dataset.updateTest==='new','Activated update delivers new HTML');check(localStorage.getItem('update-data-check')==='keep','Update preserves saved data')"),flush=True)
     preview_mode=True
-    script=site/'app.js';script.write_bytes(script.read_bytes()+b'\nwindow.livePreviewRevision=1;\n')
+    script=site/'src/js/app.js';script.write_bytes(script.read_bytes()+b'\nwindow.livePreviewRevision=1;\n')
     cdp.call('Page.navigate',{'url':url+'__preview__/'});time.sleep(.7);cdp.js(helpers)
     print(cdp.js("check(window.livePreviewRevision===1,'Preview bypasses old root-scope cache');check(document.getElementById('update-app').hidden,'Preview has no update button');check(localStorage.getItem('update-data-check')==='keep','Preview preserves existing app data')"),flush=True)
     script.write_bytes(script.read_bytes().replace(b'livePreviewRevision=1',b'livePreviewRevision=2'))
     cdp.call('Page.reload');time.sleep(.6);cdp.js(helpers)
     print(cdp.js("check(window.livePreviewRevision===2,'Ordinary reload gets edited files without version bump');(async()=>check((await navigator.serviceWorker.getRegistrations()).length===1,'Preview adds no service worker'))()"),flush=True)
-    with urllib.request.urlopen(url+'__preview__/app.js') as response:assert 'no-store' in response.headers['Cache-Control']
+    with urllib.request.urlopen(url+'__preview__/src/js/app.js') as response:assert 'no-store' in response.headers['Cache-Control']
     assert not cdp.errors,cdp.errors
     cdp.call('Browser.close');server.shutdown()
 finally:

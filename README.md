@@ -10,7 +10,7 @@ Drag an audio file anywhere onto the page, or click **Open audio file**. MP3, WA
 
 ## Preview local edits without PWA caching
 
-Stop the old Python server with Ctrl+C, then run `python preview.py` from the project folder. Open **http://localhost:8766/__preview__/** exactly (including the path). Refresh normally after editing files. The preview uses no-store responses and does not register a service worker; the separate URL path avoids the existing app-shell cache without clearing cues, recordings, or audio storage. The server stays on localhost and supports the experimental AudioWorklet engine. Use `python preview.py --port 8767` if another process needs port 8766. A different port has separate browser storage.
+Stop the old Python server with Ctrl+C, then run `python scripts/preview.py` from the project folder. Open **http://localhost:8766/__preview__/** exactly (including the path). Refresh normally after editing files. The preview uses no-store responses and does not register a service worker; the separate URL path avoids the existing app-shell cache without clearing cues, recordings, or audio storage. The server stays on localhost and supports the experimental AudioWorklet engine. Use `python scripts/preview.py --port 8767` if another process needs port 8766. A different port has separate browser storage.
 
 This preview deliberately does not test installation or offline app-shell behavior. Use an ordinary HTTP server or the hosted HTTPS app to test the PWA. The normal update button now reloads a stale page even if another tab already activated its waiting worker, shows a visible recording/unsaved-data blocker, and offers retry feedback if activation does not finish. `python tests/pwa_update_smoke.py` checks these update paths and verifies that preview refreshes load edited scripts under an existing root-scope service worker without deleting local data.
 
@@ -118,7 +118,7 @@ The app deliberately excludes loops, A/B repeat, streaming services, and cloud f
 8. With timed lyrics, play and jump between cues; confirm the highlighted line follows immediately. Scroll manually and confirm playback seeks to the centered line, then following resumes when scrolling settles.
 9. With plain lyrics, seek to halfway through the song and confirm the lyric panel is approximately halfway scrolled. Check the start and end as well.
 
-The playback code remains in `app.js`; independent metadata parsing, LRCLIB requests, result selection, and caching live in `lyrics.js`.
+The playback code remains in `src/js/app.js`; independent metadata parsing, LRCLIB requests, result selection, and caching live in `src/js/lyrics.js`.
 
 ## Validation performed
 
@@ -209,3 +209,15 @@ Browser checks exercise the real engine offline, verify audible output with a 22
 Main waveform drags scrub relative to the position where the gesture began: right rewinds and left advances, without jumping when the pointer first goes down. A click without dragging still seeks to the clicked time, and the bottom overview keeps absolute seeking. Numbered cue shortcuts also work while the volume control or playback selectors have focus; text-entry fields remain excluded.
 
 Settings is a shared header tab beside Practice and Looper. It contains recording-folder, saved-audio, screen-awake, and lyrics-display preferences. Switching to Settings pauses playback; finish an active recording before switching tabs.
+
+## Repository layout
+
+- `src/js/` - application logic (Practice, Looper, storage, lyrics, and PWA controls).
+- `src/css/` - application styles.
+- `assets/icons/` - install icons and favicon.
+- `vendor/` - bundled third-party audio engine and license.
+- `scripts/` - local preview server; run `python scripts/preview.py` from the repository root.
+- `tests/` - browser smoke tests.
+- `docs/` - project planning documents.
+
+`index.html`, `manifest.webmanifest`, and `sw.js` stay at the root to preserve the app URL, installation identity, and service-worker scope. GitHub Pages still serves the repository root; no build step is required.

@@ -4,7 +4,7 @@
 
 Build a reliable practice workflow: load a local song, set cues while listening, and jump between them instantly using the keyboard.
 
-Implementation is complete in `index.html`, `style.css`, `app.js`, and `README.md`. Automated checks in headless Edge verified the core workflow with a generated WAV file, including persistence after reloading the local page. Manual listening checks, Chrome validation, and MP3/M4A samples remain to be verified; see the README acceptance test.
+Implementation is complete in `index.html`, `src/css/style.css`, `src/js/app.js`, and `README.md`. Automated checks in headless Edge verified the core workflow with a generated WAV file, including persistence after reloading the local page. Manual listening checks, Chrome validation, and MP3/M4A samples remain to be verified; see the README acceptance test.
 
 ## 1. Scope and file structure
 
@@ -13,8 +13,8 @@ Build a desktop-first app using HTML, CSS, and vanilla JavaScript, with no depen
 | File | Responsibility |
 |---|---|
 | `index.html` | Audio loading, playback controls, seek bar, nine cue slots, shortcut guide |
-| `style.css` | Dark theme, large playback clock, accessible controls, cue highlighting |
-| `app.js` | Audio playback, keyboard handling, cue management, local persistence |
+| `src/css/style.css` | Dark theme, large playback clock, accessible controls, cue highlighting |
+| `src/js/app.js` | Audio playback, keyboard handling, cue management, local persistence |
 | `README.md` | Opening the app, controls, shortcuts, persistence, testing instructions |
 
 The app must run by opening `index.html` directly in Chrome or Edge. Use a regular script rather than modules that could require a local server.

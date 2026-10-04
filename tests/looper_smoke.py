@@ -93,10 +93,10 @@ try:
     stage=Path(tempfile.mkdtemp(prefix='mpp-pwa-site-'))
     site=stage/'music-practice-player'
     site.mkdir()
-    for name in ['index.html','style.css','app.js','practice-audio.js','audio-store.js','lyrics.js','waveform.js','pwa.js','recording-folder.js','looper-store.js','looper.js','looper-io.js','sw.js','manifest.webmanifest']:
+    for name in ['index.html','sw.js','manifest.webmanifest']:
         shutil.copy2(ROOT/name,site/name)
-    shutil.copytree(ROOT/'icons',site/'icons')
-    shutil.copytree(ROOT/'vendor',site/'vendor')
+    for name in ['src','assets','vendor']:
+        shutil.copytree(ROOT/name,site/name)
     class QuietHandler(SimpleHTTPRequestHandler):
         def log_message(self,*args): pass
     server=ThreadingHTTPServer(('127.0.0.1',0),partial(QuietHandler,directory=str(stage)))
@@ -276,6 +276,7 @@ try:
     cdp.call('Page.reload');time.sleep(.5);cdp.js(helpers)
     print(cdp.js("check(document.getElementById('looper-count-in').value==='8','Explicit count-in choice survives later reloads')"),flush=True)
     cdp.call('Emulation.setDeviceMetricsOverride',{'width':1366,'height':1000,'deviceScaleFactor':1,'mobile':False})
+    cdp.call('Page.bringToFront')
     print(cdp.js(r'''(async()=>{
       document.getElementById('mode-practice').click();await loadTestFile('centered-waveform.wav');
       await waitFor(()=>!document.getElementById('waveform-zoom').disabled);
@@ -361,7 +362,7 @@ try:
       check(Math.sqrt(power/samples.length)>.0001&&Math.abs(frequency-220)<12,'WASM output is audible and preserves 220Hz pitch at half speed: '+frequency);
       const slider=el('practice-volume-slider');slider.value='30';slider.dispatchEvent(new Event('input'));await new Promise(r=>setTimeout(r,60));
       check(Math.abs(stretchGain.gain.value-.09)<.01,'Volume controls experimental output');
-      seek.value='30';seek.dispatchEvent(new Event('input'));await new Promise(r=>setTimeout(r,100));check(Math.abs(Number(seek.value)-30)<.15,'Seek stays in original song time');
+      seek.value='30';seek.dispatchEvent(new Event('input'));check(Math.abs(testAudio.currentTime-30)<.05,'Seek uses original song time');await new Promise(r=>setTimeout(r,100));check(Math.abs(Number(seek.value)-testAudio.currentTime)<.1,'Seek UI follows original song time');
       el('play').click();const paused=Number(seek.value);await new Promise(r=>setTimeout(r,150));check(Number(seek.value)===paused,'Experimental pause freezes position');
       document.activeElement?.blur();key('1','Digit1',true);seek.value='40';seek.dispatchEvent(new Event('input'));key('1','Digit1');check(Math.abs(Number(seek.value)-paused)<.01,'Cues preserve original timestamps');
       for(const id of ['practice-volume-slider','volume-toggle','speed']){

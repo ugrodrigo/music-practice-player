@@ -1,10 +1,10 @@
-"""Local preview without PWA caching: python preview.py [--port 8766]."""
+"""Local preview without PWA caching: python scripts/preview.py [--port 8766]."""
 import argparse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 PREFIX = '/__preview__/'
 
 
