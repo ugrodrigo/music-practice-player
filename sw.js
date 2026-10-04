@@ -1,7 +1,7 @@
 "use strict";
 
 // Bump this version whenever any cached application file changes.
-const VERSION = 'v37';
+const VERSION = 'v38';
 const PREFIX = `music-practice-player:${self.registration.scope}:`;
 const CACHE = PREFIX + VERSION;
 const FILES = ['./', 'index.html', 'src/css/style.css', 'src/js/app.js', 'src/js/practice-audio.js', 'vendor/signalsmith/SignalsmithStretch.js', 'src/js/audio-store.js', 'src/js/recording-folder.js', 'src/js/looper-store.js', 'src/js/looper.js', 'src/js/looper-io.js', 'src/js/lyrics.js', 'src/js/waveform.js', 'src/js/pwa.js', 'manifest.webmanifest', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png'];

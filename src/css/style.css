@@ -8,7 +8,7 @@ button:disabled, input:disabled, select:disabled { cursor: default; opacity: .4;
 button, input, select { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 [hidden] { display: none !important; }
-.install-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: -8px 0 18px; color: var(--muted); font-size: 11px; }
+.install-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 10px 0 18px; color: var(--muted); font-size: 11px; }
 .install-row .button { min-height: 36px; padding: 6px 12px; }
 .mobile-panels { display: none; }
 .mobile-waveform-toggle { display: none; }
@@ -260,7 +260,7 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
 
 #screen-awake-status { font-size: 10px; color: var(--muted); text-align: center; margin-top: 4px; }
 
-.sticky-header { position: sticky; top: 0; z-index: 20; background: #111413; padding-top: env(safe-area-inset-top, 0px); padding-bottom: 2px; }
+.sticky-header { position: sticky; top: 0; z-index: 20; background: transparent; padding-top: env(safe-area-inset-top, 0px); padding-bottom: 2px; }
 .lyrics { top: calc(var(--header-height, 90px) + 10px); }
 .lyrics, body[data-mobile-panel="lyrics"] .lyrics { height: var(--lyrics-height, 65dvh); min-height: 180px; max-height: none; }
 .lyrics-size-controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; font-size: 11px; color: var(--muted); }
@@ -280,7 +280,7 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
 .lyrics[data-view="find"] #lyrics-height-controls { display: none; }
 @media (max-width: 760px) {
   .workspace { padding-top: calc(var(--header-height, 120px) + 8px); }
-  .sticky-header { position: fixed; inset: 0 0 auto 0; width: auto; margin: 0; padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 4px max(12px, env(safe-area-inset-left)); background: #111413; }
+  .sticky-header { position: fixed; inset: 0 0 auto 0; width: auto; margin: 0; padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 4px max(12px, env(safe-area-inset-left)); background: transparent; }
   .sticky-header .mobile-panels { margin-bottom: 4px; }
 }
 
@@ -417,7 +417,7 @@ body[data-app-mode="settings"] .practice-content, body[data-app-mode="settings"]
 #lyrics-display-config { padding: 22px; max-width: 760px; width: 100%; margin: 0 auto; overflow: visible; border: 1px solid var(--line); }
 body[data-app-mode="settings"] .workspace { padding-bottom: 24px; }
 
-/* Carry the header background to the viewport edges while keeping content aligned. */
 .sticky-header { isolation: isolate; }
-.sticky-header::before { content: ""; position: absolute; z-index: -1; inset: -24px calc((100% - 100vw) / 2) 0; background: #111413; pointer-events: none; }
-@media (max-width: 760px) { .sticky-header::before { inset: 0; } }
+
+.install-row { align-items: center; margin-top: 10px; }
+#update-app { min-height: 44px; border-color: #536342; background: #293423; color: var(--accent); }

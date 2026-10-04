@@ -108,6 +108,11 @@ try:
     cdp.call('Page.navigate',{'url':url});time.sleep(.5)
     cdp.js('(async()=>{await navigator.serviceWorker.ready;})()')
     cdp.call('Page.reload');time.sleep(.6);cdp.js(helpers)
+    for width in [390,1366]:
+        cdp.call('Emulation.setDeviceMetricsOverride',{'width':width,'height':900,'deviceScaleFactor':1,'mobile':False})
+        cdp.js("document.getElementById('update-app').hidden=false;window.scrollTo(0,0)")
+        time.sleep(.15)
+        print(cdp.js("(()=>{const header=document.querySelector('.sticky-header'),button=document.getElementById('update-app'),r=button.getBoundingClientRect();check(getComputedStyle(header).backgroundColor==='rgba(0, 0, 0, 0)','Header is transparent');check(r.top>=header.getBoundingClientRect().bottom&&r.left>=0&&r.right<=innerWidth,'Update button clears header and fits screen');return 'PASS: transparent header and visible update button';})()"),flush=True)
     before=cdp.js('performance.timeOrigin')
     cdp.js("document.getElementById('update-app').hidden=false;document.getElementById('update-app').click()")
     def wait_reload(before):
@@ -121,7 +126,7 @@ try:
     print('PASS: stale update button reloads even with no waiting worker',flush=True)
     cdp.js("localStorage.setItem('update-data-check','keep');caches.open('unrelated-cache')")
     page=site/'index.html';page.write_bytes(page.read_bytes().replace(b'<body ',b'<body data-update-test="new" '))
-    worker=site/'sw.js';worker.write_bytes(worker.read_bytes().replace(b"'v37'",b"'test-update-v38'"))
+    worker=site/'sw.js';worker.write_bytes(worker.read_bytes().replace(b"'v38'",b"'test-update-v39'"))
     cdp.js('(async()=>{const r=await navigator.serviceWorker.getRegistration();await r.update();})()')
     for i in range(100):
         if cdp.js("!document.getElementById('update-app').hidden"):break
