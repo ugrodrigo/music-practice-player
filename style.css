@@ -416,3 +416,8 @@ body[data-app-mode="looper"] .practice-content, body[data-app-mode="looper"] .sh
 body[data-app-mode="settings"] .practice-content, body[data-app-mode="settings"] .shortcuts, body[data-app-mode="settings"] .mobile-panels { display: none; }
 #lyrics-display-config { padding: 22px; max-width: 760px; width: 100%; margin: 0 auto; overflow: visible; border: 1px solid var(--line); }
 body[data-app-mode="settings"] .workspace { padding-bottom: 24px; }
+
+/* Carry the header background to the viewport edges while keeping content aligned. */
+.sticky-header { isolation: isolate; }
+.sticky-header::before { content: ""; position: absolute; z-index: -1; inset: -24px calc((100% - 100vw) / 2) 0; background: #111413; pointer-events: none; }
+@media (max-width: 760px) { .sticky-header::before { inset: 0; } }

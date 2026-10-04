@@ -110,6 +110,16 @@ try:
     print(cdp.js(r'''(async()=>{
       window.el=id=>document.getElementById('looper-'+id);
       window.waitLong=async predicate=>{for(let i=0;i<300;i++){if(await predicate())return;await new Promise(r=>setTimeout(r,30));}throw Error('Looper timeout: '+el('status').textContent+' / '+el('save-status').textContent);};
+      await RecordingFolder.ready;
+      document.getElementById('mode-settings').click();
+      window.cancelPicker=true;document.getElementById('recording-choose').click();
+      await waitLong(()=>document.getElementById('recording-status').textContent.includes('cancelled'));
+      check(!document.getElementById('recording-choose').disabled,'Settings folder picker recovers after cancel');
+      window.cancelPicker=false;document.getElementById('recording-choose').click();
+      await waitLong(()=>RecordingFolder.name==='test-recordings');
+      document.getElementById('recording-test').click();
+      await waitLong(()=>document.getElementById('recording-status').textContent.startsWith('Saved to'));
+      document.getElementById('mode-practice').click();
       await loadTestFile('looper-practice.wav');
       testAudio.pause();testAudio.currentTime=10;
       document.activeElement?.blur();key('ArrowRight','ArrowRight');check(testAudio.currentTime===10.5,'Arrow seeks 0.5s');
