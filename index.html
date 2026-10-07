@@ -14,12 +14,14 @@
   <script src="src/js/audio-store.js" defer></script>
   <script src="vendor/signalsmith/SignalsmithStretch.js" defer></script>
   <script src="src/js/practice-audio.js" defer></script>
+  <script src="src/js/sync-store.js" defer></script>
   <script src="src/js/app.js" defer></script>
   <script src="src/js/recording-folder.js" defer></script>
   <script src="src/js/looper-store.js" defer></script>
   <script src="src/js/looper-io.js" defer></script>
   <script src="src/js/looper.js" defer></script>
   <script src="src/js/navigation.js" defer></script>
+  <script src="src/js/firebase-sync.js" type="module"></script>
   <script src="src/js/pwa.js" defer></script>
 </head>
 <body data-waveform-expanded="true" data-app-mode="practice">
@@ -46,6 +48,20 @@
 
       <section id="lyrics-display-config" class="panel" aria-labelledby="config-heading" hidden>
       <h2 id="config-heading" class="config-heading">Configurations</h2>
+      <section class="sync-settings" aria-labelledby="sync-heading">
+        <h3 id="sync-heading">Account &amp; sync</h3>
+        <p id="sync-account">Not signed in</p>
+        <p>Sign in to sync notes and cues across devices. Audio and recordings stay local.</p>
+        <div class="recording-actions">
+          <button id="sync-signin" type="button">Sign in with Google</button>
+          <button id="sync-signout" type="button" hidden>Sign out</button>
+          <button id="sync-retry" type="button">Retry sync</button>
+          <button id="sync-import" type="button" hidden>Import this device’s local notes and cues</button>
+        </div>
+        <p id="sync-status" role="status">Notes and cues are saved on this device.</p>
+        <p>To import older cues, first open their songs while signed out. Each account keeps its own local copy; signing out returns to your separate local notes.</p>
+        <div id="sync-conflicts"></div>
+      </section>
       <section class="recording-folder" aria-labelledby="recording-heading">
         <h4 id="recording-heading">Recording folder</h4>
         <p>Choose a folder for automatic recording copies. Save test WAV checks access with a one-second silent file.</p>
@@ -61,8 +77,8 @@
 
     <section id="notes-panel" class="panel" aria-labelledby="notes-label" hidden>
       <label id="notes-label" for="notes-text">Your notes</label>
-      <p class="notes-hint">A space for practice reminders, chords and ideas. Saved on this device.</p>
-      <textarea id="notes-text" placeholder="Write your notes here..." aria-describedby="notes-save-status"></textarea>
+      <p class="notes-hint">A space for practice reminders, chords and ideas. Sign in through Configurations to sync across devices.</p>
+      <textarea id="notes-text" maxlength="30000" placeholder="Write your notes here..." aria-describedby="notes-save-status"></textarea>
       <p id="notes-save-status" role="status">Notes save automatically.</p>
     </section>
 

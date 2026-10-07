@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/items/{itemId} {
+      function owner() { return request.auth != null && request.auth.uid == uid; }
+      function valid() {
+        return request.resource.data.keys().hasOnly(['payload', 'revision'])
+          && request.resource.data.payload is string
+          && request.resource.data.payload.size() <= 200000
+          && request.resource.data.revision is int
+          && (itemId == 'notes' || itemId.matches('track-[a-f0-9]{64}-cue-[0-9]+'));
+      }
+      allow read: if owner();
+      allow create: if owner() && valid() && request.resource.data.revision == 1;
+      allow update: if owner() && valid()
+        && request.resource.data.revision == resource.data.revision + 1;
+      // Cleared cues are stored as null payloads, retaining their revision.
+      allow delete: if false;
+    }
+  }
+}

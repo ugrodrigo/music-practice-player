@@ -14,6 +14,8 @@
   let activeFile = null, memoryRevision = 0;
   let ready = false;
   let cues = Array(8).fill(null);
+  let cueTrack = null, cueGeneration = 0, savingCues = false;
+  let cueSnapshot = [];
   let frame = 0;
   let dragDepth = 0;
   const cards = [];
@@ -157,6 +159,7 @@
 
   function restoreCues() {
     warnStorage("");
+    if (window.PracticeSync.owner !== 'guest') return;
     try {
       const stored = localStorage.getItem(storagePrefix + filename);
       if (!stored) return;
@@ -175,12 +178,63 @@
 
   function persistCues() {
     try {
-      localStorage.setItem(storagePrefix + filename, JSON.stringify({ version: 1, cues }));
+      if (window.PracticeSync.owner === 'guest') localStorage.setItem(storagePrefix + filename, JSON.stringify({ version: 1, cues }));
+      if (cueTrack) {
+        savingCues = true;
+        cues.forEach((cue, index) => {
+          if (JSON.stringify(cue) !== JSON.stringify(cueSnapshot[index] ?? null)) window.PracticeSync.put(`${cueTrack}-cue-${index}`, cue);
+        });
+        cueSnapshot = JSON.parse(JSON.stringify(cues));
+      }
       warnStorage("");
     } catch {
       warnStorage("Cue changes are only available for this session: browser storage is unavailable or full.");
+    } finally { savingCues = false; }
+  }
+
+  function refreshSyncedCues() {
+    if (!cueTrack || !ready) return;
+    const prefix = `${cueTrack}-cue-`;
+    const indexes = window.PracticeSync.keys().filter(key => key.startsWith(prefix))
+      .map(key => Number(key.slice(prefix.length))).filter(index => Number.isInteger(index) && index >= 0 && index < 4096);
+    const length = Math.max(8, Math.ceil((Math.max(-1, ...indexes) + 1) / 8) * 8);
+    cues = Array.from({ length }, (_, index) => {
+      const cue = window.PracticeSync.get(prefix + index);
+      return cue && Number.isFinite(cue.time) && cue.time >= 0 && cue.time <= audio.duration
+        ? { time: cue.time, name: String(cue.name || '').slice(0, 100) } : null;
+    });
+    if (cues.every(Boolean)) cues.push(...Array(8).fill(null));
+    cueSnapshot = JSON.parse(JSON.stringify(cues));
+    cuePage = Math.min(cuePage, Math.floor((cues.length - 1) / 8));
+    while (cards.length > cues.length) { const card = cards.pop(); clearTimeout(card.timer); card.root.remove(); }
+    ensureCards(); cards.forEach((_, index) => renderCue(index));
+  }
+  async function identifyCueTrack(file, generation) {
+    try {
+      const hash = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+      if (generation !== cueGeneration) return;
+      cueTrack = `track-${Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('')}`;
+      savingCues = true;
+      // Existing guest cues migrate locally; account imports require the explicit button.
+      cues.forEach((cue, index) => {
+        const key = `${cueTrack}-cue-${index}`;
+        if (cue && !window.PracticeSync.has(key)) window.PracticeSync.put(key, cue);
+      });
+      savingCues = false;
+      refreshSyncedCues();
+    } catch {
+      savingCues = false;
+      if (generation === cueGeneration) warnStorage('Could not identify this audio file. Cue sync is unavailable for this track.');
     }
   }
+  document.addEventListener('syncchange', event => {
+    if (!savingCues && event.detail.keys.some(key => key.startsWith(`${cueTrack}-cue-`))) refreshSyncedCues();
+  });
+  document.addEventListener('syncaccountchange', () => {
+    cues = Array(8).fill(null); cueSnapshot = [];
+    if (cueTrack) refreshSyncedCues();
+    else { restoreCues(); cards.forEach((_, index) => renderCue(index)); }
+  });
 
   function renderCue(index) {
     window.Waveform.setCues(cues);
@@ -441,6 +495,7 @@
       return;
     }
     activeFile = file;
+    cueTrack = null; cueSnapshot = []; const generation = ++cueGeneration;
     memoryRevision++;
     const previous = audio;
     const current = new PracticeAudio(new Audio(), file);
@@ -483,6 +538,7 @@
       ui.seek.max = String(current.duration);
       restoreCues();
       setReady(true);
+      identifyCueTrack(file, generation);
       if (!restored) saveLastAudio(file);
       window.LyricsPanel.load(file, current.duration);
       window.Waveform.load(file, current.duration);

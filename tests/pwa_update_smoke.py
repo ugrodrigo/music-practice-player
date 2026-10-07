@@ -126,7 +126,9 @@ try:
     print('PASS: stale update button reloads even with no waiting worker',flush=True)
     cdp.js("localStorage.setItem('update-data-check','keep');caches.open('unrelated-cache')")
     page=site/'index.html';page.write_bytes(page.read_bytes().replace(b'<body ',b'<body data-update-test="new" '))
-    worker=site/'sw.js';worker.write_bytes(worker.read_bytes().replace(b"'v38'",b"'test-update-v39'"))
+    import re
+    worker=site/'sw.js'
+    worker.write_bytes(re.sub(rb"const VERSION = '[^']+';", b"const VERSION = 'test-update';", worker.read_bytes(), count=1))
     cdp.js('(async()=>{const r=await navigator.serviceWorker.getRegistration();await r.update();})()')
     for i in range(100):
         if cdp.js("!document.getElementById('update-app').hidden"):break

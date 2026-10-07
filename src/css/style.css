@@ -452,3 +452,11 @@ body[data-app-mode="notes"] .workspace { padding-bottom: 24px; }
   #install-app { padding: 8px; min-height: 44px; font-size: 12px; }
   .install-app-suffix { display: none; }
 }
+
+.sync-settings { padding: 18px 0; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+.sync-settings p { margin: 10px 0; color: var(--muted); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.sync-settings button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #293229; }
+.sync-settings #sync-status { color: var(--accent); }
+.sync-conflict { margin-top: 18px; padding: 14px; border: 1px solid #a89058; border-radius: 10px; }
+.sync-conflict textarea { display: block; width: 100%; min-height: 90px; background: #111a14; color: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 8px; font: inherit; }
+.sync-conflict button { margin: 8px 8px 0 0; }
