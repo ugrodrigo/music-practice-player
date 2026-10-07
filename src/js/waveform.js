@@ -11,6 +11,7 @@ window.Waveform = (() => {
   let peaks = null, progress = 0, revision = 0, frame = 0, pointer = null;
   let jobs = Promise.resolve();
   let trackDuration = 0, scale = 1, dragView = null, dragOrigin = null;
+  let cues = [];
   const yieldToUI = () => new Promise((resolve) => setTimeout(resolve, 0));
 
   function view() {
@@ -53,6 +54,39 @@ window.Waveform = (() => {
     target.globalAlpha = 1;
   }
 
+  function drawCues(current, width, ratio) {
+    context.save();
+    context.font = `600 ${10 * ratio}px Segoe UI`;
+    context.textAlign = 'center';
+    context.textBaseline = 'top';
+    for (const cue of cues) {
+      const x = (cue.time - current.start) / current.span * width;
+      if (x < 0 || x > width) continue;
+      const halfWidth = Math.max(13 * ratio, context.measureText(cue.number).width / 2 + 7 * ratio);
+      // Keep the number readable at the edges while the tip marks the exact time.
+      const center = Math.max(halfWidth, Math.min(width - halfWidth, x));
+      context.beginPath();
+      context.moveTo(center - halfWidth, ratio);
+      context.lineTo(center + halfWidth, ratio);
+      context.lineTo(x, 25 * ratio);
+      context.closePath();
+      context.fillStyle = '#d8ee96';
+      context.fill();
+      context.strokeStyle = '#182016';
+      context.lineWidth = ratio;
+      context.stroke();
+      context.fillStyle = '#182016';
+      context.fillText(cue.number, center, 3 * ratio);
+    }
+    context.restore();
+  }
+
+  function setCues(points) {
+    cues = points.flatMap((cue, index) => cue && Number.isFinite(cue.time)
+      ? [{ time: cue.time, number: String(index + 1) }] : []);
+    scheduleDraw();
+  }
+
   function draw() {
     frame = 0;
     if (!context) return;
@@ -82,6 +116,7 @@ window.Waveform = (() => {
     context.fillStyle = '#f0f8db';
     context.fillRect(Math.max(0, Math.min(width - 2, playhead)), 0, 2, mainHeight);
     context.fillRect(Math.min(width - 2, width * progress), overviewTop, 2, height - overviewTop);
+    drawCues(current, width, ratio);
   }
 
   function scheduleDraw() { if (!frame) frame = requestAnimationFrame(draw); }
@@ -100,7 +135,7 @@ window.Waveform = (() => {
 
   function reset() {
     revision++;
-    peaks = null; progress = 0;
+    peaks = null; progress = 0; cues = [];
     trackDuration = 0; dragView = null; dragOrigin = null; zoom.disabled = true;
     if (pointer !== null && canvas.hasPointerCapture(pointer)) canvas.releasePointerCapture(pointer);
     pointer = null;
@@ -222,5 +257,5 @@ window.Waveform = (() => {
   for (const event of ['pointercancel', 'lostpointercapture']) canvas.addEventListener(event, () => { pointer = null; dragView = null; dragOrigin = null; scheduleDraw(); });
   zoom.addEventListener('change', scheduleDraw);
   new ResizeObserver(resize).observe(canvas);
-  return { reset, load, update };
+  return { reset, load, update, setCues };
 })();

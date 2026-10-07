@@ -183,6 +183,7 @@
   }
 
   function renderCue(index) {
+    window.Waveform.setCues(cues);
     const cue = cues[index];
     const card = cards[index];
     if (!card) return;
