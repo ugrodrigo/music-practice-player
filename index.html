@@ -19,23 +19,33 @@
   <script src="src/js/looper-store.js" defer></script>
   <script src="src/js/looper-io.js" defer></script>
   <script src="src/js/looper.js" defer></script>
+  <script src="src/js/navigation.js" defer></script>
   <script src="src/js/pwa.js" defer></script>
 </head>
 <body data-waveform-expanded="true" data-app-mode="practice">
   <main class="workspace">
     <div class="sticky-header">
     <header class="app-header">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">♫</span><div><p class="eyebrow">YOUR PERSONAL PRACTICE SPACE</p><h1>Music Practice Player</h1></div></div>
-      <span class="local-badge"><span aria-hidden="true">●</span> Local audio. Just you.</span>
-      <button id="install-app" class="button button-outline" type="button" hidden>Install app</button>
+      <div class="app-navigation">
+        <button id="app-menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="app-menu">
+          <svg viewBox="0 0 56 32" width="52" height="32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 8h15M4 16h15M4 24h15M36 22V8l12-3v14M36 12l12-3"/></g><g fill="currentColor"><ellipse cx="32" cy="23" rx="4" ry="3"/><ellipse cx="44" cy="20" rx="4" ry="3"/></g></svg>
+        </button>
+        <nav id="app-menu" class="app-modes" aria-label="App navigation" hidden>
+          <button id="mode-practice" type="button" aria-pressed="true">Practice</button>
+          <button id="mode-looper" type="button" aria-pressed="false">Looper</button>
+          <button id="mode-notes" type="button" aria-pressed="false">Notes</button>
+          <button id="mode-settings" type="button" aria-pressed="false">Configurations</button>
+        </nav>
+      </div>
+      <h1 id="app-mode-title">Practice</h1>
+      <button id="install-app" class="button button-outline" type="button" aria-label="Install app" hidden>Install<span class="install-app-suffix"> app</span></button>
     </header>
-    <nav class="app-modes" aria-label="App mode"><button id="mode-practice" type="button" aria-pressed="true">Practice</button><button id="mode-looper" type="button" aria-pressed="false">Looper</button><button id="mode-settings" type="button" aria-label="Settings" title="Settings" aria-pressed="false" aria-controls="lyrics-display-config"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M9 2h6l.6 3 2 .9 2.7-1 3 5.2-2.4 2v1.8l2.4 2-3 5.2-2.7-1-2 .9-.6 3H9l-.6-3-2-.9-2.7 1-3-5.2 2.4-2v-1.8l-2.4-2 3-5.2 2.7 1 2-.9L9 2zm3 6a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" transform="translate(1 0) scale(.92)"/></svg></button></nav>
     <nav class="mobile-panels" aria-label="Practice panel"><button id="show-lyrics" type="button" aria-pressed="true">Lyrics</button><button id="show-cues" type="button" aria-pressed="false">Cues</button><button id="mobile-open-file" class="button button-outline" type="button">Open audio file</button></nav>
     </div>
     <div class="install-row"><span id="offline-status" hidden>Local audio stays on your device.</span><button id="update-app" class="button button-outline" type="button" hidden>Update &amp; reload</button><span id="update-status" role="status" aria-live="polite"></span></div>
 
       <section id="lyrics-display-config" class="panel" aria-labelledby="config-heading" hidden>
-      <h2 id="config-heading" class="config-heading">Settings</h2>
+      <h2 id="config-heading" class="config-heading">Configurations</h2>
       <section class="recording-folder" aria-labelledby="recording-heading">
         <h4 id="recording-heading">Recording folder</h4>
         <p>Choose a folder for automatic recording copies. Save test WAV checks access with a one-second silent file.</p>
@@ -48,6 +58,13 @@
       <div class="lyrics-size-controls" aria-label="Lyrics display"><span class="lyrics-size-label">Text size</span><button id="lyrics-smaller" type="button" aria-label="Smaller lyrics">A-</button><span id="lyrics-size" aria-live="polite">16px</span><button id="lyrics-larger" type="button" aria-label="Larger lyrics">A+</button></div>
       <div id="lyrics-height-controls"><label for="lyrics-height-slider">Box height <span id="lyrics-height-value">Auto</span></label><input id="lyrics-height-slider" type="range" min="40" max="100" step="5" value="100"><button id="lyrics-height-auto" type="button">Auto</button></div>
       </section>
+
+    <section id="notes-panel" class="panel" aria-labelledby="notes-label" hidden>
+      <label id="notes-label" for="notes-text">Your notes</label>
+      <p class="notes-hint">A space for practice reminders, chords and ideas. Saved on this device.</p>
+      <textarea id="notes-text" placeholder="Write your notes here..." aria-describedby="notes-save-status"></textarea>
+      <p id="notes-save-status" role="status">Notes save automatically.</p>
+    </section>
 
     <div class="practice-content">
     <section class="player panel" aria-label="Audio player">

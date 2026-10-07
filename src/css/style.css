@@ -424,3 +424,31 @@ body[data-app-mode="settings"] .workspace { padding-bottom: 24px; }
 
 .install-row { align-items: center; margin-top: 10px; }
 #update-app { min-height: 44px; border-color: #536342; background: #293423; color: var(--accent); }
+
+/* Equal side columns keep the title centered with or without the install action. */
+.app-header { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); margin-bottom: 10px; gap: 12px; }
+.app-header > .app-navigation { justify-self: start; }
+.app-header > #install-app { justify-self: end; white-space: nowrap; }
+.app-navigation { position: relative; display: flex; align-items: center; gap: 12px; min-width: 0; }
+#app-menu-toggle { display: grid; place-items: center; flex-shrink: 0; width: 64px; height: 44px; padding: 4px; border: 1px solid #d8ee9660; border-radius: 12px; background: var(--accent); color: #23321a; }
+.app-header #app-mode-title { font-size: 22px; line-height: 1.2; letter-spacing: -.4px; text-align: center; }
+#app-menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; display: flex; flex-direction: column; gap: 4px; width: 224px; max-width: calc(100vw - 32px); margin: 0; padding: 8px; border: 1px solid #536342; border-radius: 14px; background: #1a1f1c; box-shadow: 0 12px 32px #0008; }
+#app-menu button { display: block; flex: none; min-height: 44px; padding: 10px 14px; text-align: left; border-color: transparent; }
+#app-menu button:hover { background: #35432b; }
+#app-menu button[aria-pressed="true"] { border-color: #536342; }
+body[data-app-mode="notes"] .practice-content, body[data-app-mode="notes"] .shortcuts, body[data-app-mode="notes"] .mobile-panels { display: none; }
+body[data-app-mode="notes"] .workspace { padding-bottom: 24px; }
+#notes-panel { max-width: 950px; margin: 0 auto; padding: 22px; }
+#notes-label { display: block; font-size: 18px; font-weight: 600; }
+.notes-hint, #notes-save-status { font-size: 13px; line-height: 1.5; color: var(--muted); margin-top: 8px; }
+#notes-text { display: block; width: 100%; min-height: 45dvh; margin-top: 18px; padding: 16px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; background: #111a14; color: inherit; font: 16px/1.7 "Segoe UI", system-ui, sans-serif; }
+@media (max-width: 420px) {
+  .app-header { gap: 8px; }
+  .app-header #app-mode-title { font-size: 19px; }
+  .app-navigation { gap: 10px; }
+  #notes-panel { padding: 16px; }
+}
+@media (max-width: 760px) {
+  #install-app { padding: 8px; min-height: 44px; font-size: 12px; }
+  .install-app-suffix { display: none; }
+}
