@@ -1,6 +1,6 @@
 :root { color-scheme: dark; font-family: "Segoe UI", system-ui, sans-serif; color: #eeeee8; background: #111413; --muted: #979e98; --line: #333b34; --accent: #d8ee96; }
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; background: radial-gradient(ellipse at 90% 0%, #222b20 0, transparent 45%); }
+body { --page-background: radial-gradient(ellipse at 90% 0%, #222b20 0, transparent 45%) #111413; margin: 0; min-width: 320px; background: var(--page-background) fixed; overflow-x: clip; }
 button, input, select { font: inherit; }
 button, select, input[type="range"] { cursor: pointer; }
 button { color: inherit; }
@@ -418,6 +418,9 @@ body[data-app-mode="settings"] .practice-content, body[data-app-mode="settings"]
 body[data-app-mode="settings"] .workspace { padding-bottom: 24px; }
 
 .sticky-header { isolation: isolate; }
+/* Share the viewport-aligned page gradient, with an opaque base to hide scrolling content.
+   Extend through the workspace gutters without changing the header's content width. */
+.sticky-header::before { content: ""; position: absolute; inset: 0 calc(50% - 50vw); z-index: -1; background: var(--page-background) fixed; pointer-events: none; }
 
 .install-row { align-items: center; margin-top: 10px; }
 #update-app { min-height: 44px; border-color: #536342; background: #293423; color: var(--accent); }
