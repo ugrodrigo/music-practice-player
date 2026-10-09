@@ -1,0 +1,13 @@
+{
+  "name": "music-practice-player-tests",
+  "private": true,
+  "scripts": {
+    "test:rules": "firebase emulators:exec --only firestore --project demo-music-practice --config firebase.emulators.json \"node --test tests/firestore-rules.test.mjs\"",
+    "test:sync-browser": "firebase emulators:exec --only auth,firestore --project demo-music-practice --config firebase.emulators.json \"python tests/firebase_browser_smoke.py\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.0",
+    "firebase": "12.19.0",
+    "firebase-tools": "15.33.0"
+  }
+}

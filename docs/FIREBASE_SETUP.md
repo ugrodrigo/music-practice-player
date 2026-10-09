@@ -54,8 +54,41 @@ and clear site data if you need to remove all local copies (including pending ed
 
 Run `python tests/sync_smoke.py` for isolated two-client sync tests with a simulated
 cloud, and the existing `looper_smoke.py` and `pwa_update_smoke.py` regressions.
-These tests don't authenticate as a real user or validate the deployed Firestore
-rules. A real-account test on the authorized site is still required.
+For security rules and integration against real Firebase SDKs, install Node 22+
+and Java 21+, then run:
+
+```sh
+npm ci
+npm run test:rules
+npm run test:sync-browser
+```
+
+The browser test also requires Python and Windows Edge. Both commands use only
+the local `demo-music-practice` emulator project. Rule tests cover signed-out and
+cross-account access, allowed owner access, revisions, payload limits, unknown
+paths and atomic batch rejection. The browser test uses two isolated profiles,
+the production sync code, and local Auth/Firestore emulators; its HTTP test server
+injects emulator connections without adding test switches to the shipped app.
+Production Google API endpoints are blocked during the browser test.
+
+Verification on 2026-10-09: all seven rule tests and the two-profile emulator
+browser test passed. Two read-only requests to the live project's
+`users/security-check/items` path (a document read and collection listing), without
+credentials, both returned `403 PERMISSION_DENIED: Missing or insufficient
+permissions`. This checks signed-out denial only, not live cross-account access.
+
+These checks don't verify your real Google OAuth popup, physical phone behavior,
+or whether the rules currently deployed in the live project match this file.
+A real-account test on the authorized site is still required. Do not put real
+account credentials in automated tests.
+
+For the final live check, use the same deployed app version on desktop and phone:
+sign into the same Google account, change a note on each device in turn, and verify
+the changes arrive. Open byte-identical audio files and repeat with cue creation,
+renaming and resetting. Then edit the same note offline on one device, change it
+online on the other, reconnect and confirm both versions are offered for review.
+Sign out and verify account notes disappear from the interface. Separate account
+caches remain on the device until site data is cleared.
 
 Publishing Firestore rules does not publish the app. GitHub Pages receives these
 changes only after the repository's normal deployment.
