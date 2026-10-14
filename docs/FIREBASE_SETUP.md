@@ -92,3 +92,58 @@ caches remain on the device until site data is cleared.
 
 Publishing Firestore rules does not publish the app. GitHub Pages receives these
 changes only after the repository's normal deployment.
+
+## App Check and API-key restrictions
+
+On 2026-10-14 the live browser key was verified as restricted to the GitHub Pages
+and Firebase auth-helper origins (root and `/*`), plus `http://localhost:8766`
+(root and `/*`). Its API allowlist contains Identity Toolkit, Token Service,
+Firestore, Datastore, Firebase Management, Cloud Logging, and Firebase App Check.
+The last entry was added for App Check token exchange; existing restrictions
+were preserved. Website restrictions reduce misuse but are not authorization:
+non-browser clients can forge referrer headers. Owner-only Firestore rules remain
+the data-access boundary. Public browser keys are not passwords, and putting
+them in a frontend `.env` would not hide them from browsers.
+
+reCAPTCHA Enterprise and App Check APIs are enabled. The web app is registered
+with a score-based Enterprise site key restricted to `ugrodrigo.github.io` and
+`music-practice-player.firebaseapp.com`, a one-hour token TTL and score threshold
+0.5. The public site key is in `firebase-config.js`. App Check initializes before
+Auth and Firestore, with token auto-refresh. No analytics SDK was added.
+
+**Enforcement is pending deployment and a real-browser check.** Registering the
+provider and shipping the SDK alone does not reject unverified requests.
+
+1. Deploy this app version to GitHub Pages. Update/reload the installed PWA on
+   desktop and phone (service-worker version v44).
+2. Sign in and edit notes/cues on both devices. In Firebase Console → App Check,
+   confirm verified requests are arriving for the services used by the app.
+3. Enable enforcement for Cloud Firestore after checking legitimate traffic.
+   Check Authentication support/requirements in the console before enabling its
+   enforcement separately. Verify sign-in, token refresh and cross-device sync.
+4. Confirm an authenticated request without an App Check token is rejected after
+   enforcement propagates. An unauthenticated Firestore denial alone only tests
+   Security Rules, not App Check. Do not use customer credentials in test scripts.
+
+For localhost development against the live project, create a private debug token
+in Firebase Console → App Check → this web app → Manage debug tokens. In DevTools
+on `http://localhost:8766`, set the token in sessionStorage and reload:
+
+```js
+sessionStorage.setItem('music-practice-player:app-check-debug-token', 'YOUR_PRIVATE_DEBUG_TOKEN');
+location.reload();
+```
+
+The app reads this value only on loopback hosts. Never commit/share the token or
+add localhost to the production reCAPTCHA key. Remove the sessionStorage item
+and revoke the token when finished. Emulator browser tests replace App Check in
+their test HTTP server; production code has no emulator bypass. They do not
+verify real reCAPTCHA attestation. Run the focused integration tests with
+`node --test tests/app-check.test.mjs` as well as `npm run test:sync-browser`.
+
+Validation on 2026-10-14: all three App Check initialization tests, the two-profile
+Auth/Firestore emulator sync test (including account isolation and offline
+conflicts), and the Edge PWA update regression passed. Real production App Check
+tokens and enforcement have not yet been validated.
+
+Reference: https://firebase.google.com/docs/app-check/web/recaptcha-enterprise-provider

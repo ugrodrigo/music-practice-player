@@ -1,4 +1,5 @@
-import { firebaseConfig } from './firebase-config.js';
+import { firebaseConfig, appCheckSiteKey } from './firebase-config.js';
+import { startAppCheck } from './firebase-app-check.js';
 
 const $ = id => document.getElementById(id);
 const sync = window.PracticeSync;
@@ -9,7 +10,7 @@ function message(error) {
     'auth/operation-not-allowed': 'Enable Google in Firebase Authentication → Sign-in method.',
     'auth/popup-blocked': 'Allow the Google sign-in popup, then try again.',
     'auth/popup-closed-by-user': 'Sign-in was cancelled. Your local data is unchanged.',
-    'permission-denied': 'Sync access was denied. Publish the supplied Firestore rules for this project.',
+    'permission-denied': 'Sync access was denied. Check your account and retry. If this continues, review Firestore rules and App Check settings.',
     'unavailable': 'Cloud sync is unavailable. Changes will wait on this device.',
   };
   return messages[error.code] || `Could not connect (${error.code || 'network error'}). Check your connection and retry.`;
@@ -83,6 +84,7 @@ async function initialize() {
     ]);
     api = { ...authSDK, ...firestoreSDK };
     const app = appSDK.initializeApp(firebaseConfig);
+    await startAppCheck(app, appCheckSiteKey);
     auth = api.getAuth(app);
     // Our account-scoped outbox handles offline writes and revision conflicts.
     db = api.initializeFirestore(app, { localCache: api.memoryLocalCache() });

@@ -63,7 +63,9 @@ class TestServer(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split('?')[0]
         if path == '/src/js/firebase-config.js':
-            body = "export const firebaseConfig = {apiKey:'demo-key',projectId:'demo-music-practice',authDomain:'localhost',appId:'demo-app'};"
+            body = "export const firebaseConfig = {apiKey:'demo-key',projectId:'demo-music-practice',authDomain:'localhost',appId:'demo-app'}; export const appCheckSiteKey = 'emulator-only';"
+        elif path == '/src/js/firebase-app-check.js':
+            body = 'export async function startAppCheck() {}'  # Emulators do not attest browsers.
         elif path == '/src/js/firebase-sync.js':
             body = (ROOT / 'src/js/firebase-sync.js').read_text(encoding='utf-8')
             auth_line = 'auth = api.getAuth(app);'

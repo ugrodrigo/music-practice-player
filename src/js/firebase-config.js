@@ -7,3 +7,6 @@ export const firebaseConfig = {
   messagingSenderId: '26996166257',
   appId: '1:26996166257:web:72449df60014008488d5d0',
 };
+
+// Public reCAPTCHA Enterprise site key. Never commit App Check debug tokens.
+export const appCheckSiteKey = '6LdR_eYtAAAAAEqaPaOFGbMO3GgNS0kGE3XUF8Df';

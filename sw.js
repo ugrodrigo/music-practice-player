@@ -1,12 +1,12 @@
 "use strict";
 
 // Bump this version whenever any cached application file changes.
-const VERSION = 'v43';
+const VERSION = 'v44';
 const PREFIX = `music-practice-player:${self.registration.scope}:`;
 const CACHE = PREFIX + VERSION;
 const FILES = ['./', 'index.html', 'src/css/style.css', 'src/js/app.js', 'src/js/practice-audio.js', 'vendor/signalsmith/SignalsmithStretch.js', 'src/js/audio-store.js', 'src/js/recording-folder.js', 'src/js/looper-store.js', 'src/js/looper.js', 'src/js/looper-io.js', 'src/js/lyrics.js', 'src/js/waveform.js', 'src/js/pwa.js', 'src/js/navigation.js', 'manifest.webmanifest', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png'];
 const URLS = FILES.map((file) => new URL(file, self.registration.scope).href);
-for (const file of ['src/js/sync-store.js', 'src/js/firebase-config.js', 'src/js/firebase-sync.js']) URLS.push(new URL(file, self.registration.scope).href);
+for (const file of ['src/js/sync-store.js', 'src/js/firebase-config.js', 'src/js/firebase-app-check.js', 'src/js/firebase-sync.js']) URLS.push(new URL(file, self.registration.scope).href);
 
 self.addEventListener('install', (event) => {
   // Installation succeeds only after the entire app is cached.
