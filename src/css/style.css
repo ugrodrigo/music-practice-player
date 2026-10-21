@@ -120,7 +120,7 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
 #lyrics-mode { color: var(--muted); font-size: 11px; }
 #lyrics-settings { flex-shrink: 0; max-height: 55%; overflow-y: auto; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
 #lyrics-settings summary { cursor: pointer; color: #b9c5ad; font-size: 12px; }
-.lyrics > :not(.lyrics-text):not(.lyrics-results):not(#lyrics-settings) { flex-shrink: 0; }
+.lyrics > :not(.lyrics-text):not(.lyrics-results):not(#lyrics-settings):not(#notes-panel) { flex-shrink: 0; }
 .lyric-line { display: block; width: 100%; text-align: left; font: inherit; line-height: inherit; background: transparent; padding: 7px 10px; border: 0; border-left: 2px solid transparent; color: #9ca697; white-space: pre-wrap; cursor: pointer; }
 .lyric-line:hover { color: #eef6d8; background: #243020; }
 .lyric-line:focus-visible { outline-offset: -2px; }
@@ -229,15 +229,30 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
 
 .mobile-cue-tools { align-items: center; gap: 8px; }
 #quick-cues { flex: 1; min-width: 0; }
-.lyrics-heading { gap: 8px; }
-.lyrics-heading button, .lyrics-heading a { background: transparent; border: 0; color: var(--muted); font-size: 12px; padding: 8px 0; min-height: 44px; text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap; }
+.lyrics-heading { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+.lyrics-heading button { width: 100%; background: transparent; border: 0; color: var(--muted); font-size: 14px; padding: 8px 4px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
 .lyrics-heading button[aria-pressed="true"] { color: var(--accent); border-bottom: 2px solid var(--accent); }
-#lyrics-view { font-size: 18px; font-weight: 600; }
+.lyrics-auto-option { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+#lyrics-form .lyrics-auto { display: inline-flex; align-items: center; gap: 7px; margin: 0; min-height: 28px; }
+#lyrics-form .lyrics-auto input { flex: none; width: 16px; height: 16px; min-width: 16px; margin: 0; padding: 0; accent-color: var(--accent); }
+#lyrics-auto-help { flex: none; width: 24px; height: 24px; margin: 0; padding: 0; border: 1px solid #626b65; border-radius: 50%; background: #343a36; color: #f3f5f1; font-size: 12px; font-weight: 700; }
+#lyrics-form #lyrics-auto-help { margin: 0; }
+#lyrics-auto-help:hover, #lyrics-auto-help[aria-expanded="true"] { background: #454d47; }
+#lyrics-auto-description { margin: 0; }
+.lyrics-actions { display: flex; gap: 8px; margin-top: 8px; }
+.lyrics-actions .button { flex: 1; min-width: 0; margin-top: 0; padding-inline: 8px; text-align: center; font-size: 12px; white-space: nowrap; }
+#lyrics-form .lyrics-actions button { margin-top: 0; }
+#lyrics-genius { background: #343a36; border-color: #626b65; color: #f3f5f1; text-decoration: none; }
+#lyrics-genius:hover { background: #454d47; }
 #lyrics-settings > summary { display: none; }
 .lyrics[data-view="lyrics"] #lyrics-settings, .lyrics[data-view="lyrics"] #lyrics-results { display: none; }
 .lyrics[data-view="find"] #lyrics-text, .lyrics[data-view="find"] #lyrics-match, .lyrics[data-view="find"] #lyrics-mode { display: none; }
-.lyrics[data-view="find"] #lyrics-settings { max-height: none; overflow-y: auto; flex-shrink: 1; }
+.lyrics[data-view="find"] #lyrics-settings { max-height: none; overflow-y: auto; flex-shrink: 1; scrollbar-gutter: stable; padding-right: 8px; }
+.lyrics[data-view="find"] #lyrics-form { gap: 5px; margin-top: 10px; }
+.lyrics[data-view="find"] #lyrics-form input:not([type="checkbox"]) { padding: 7px 9px; margin-bottom: 2px; }
 .lyrics[data-view="find"] #lyrics-status { display: block; }
+.lyrics[data-view="notes"] > :not(.lyrics-heading):not(#lyrics-heading):not(#notes-panel) { display: none !important; }
+.lyrics:not([data-view="notes"]) #notes-panel { display: none; }
 .lyrics-text.synced { padding-top: 0; padding-bottom: var(--lyric-edge, 0px); background: none; }
 .lyric-line { user-select: none; -webkit-user-select: none; touch-action: pan-y; }
 @media (max-width: 760px) {
@@ -436,17 +451,14 @@ body[data-app-mode="settings"] .workspace { padding-bottom: 24px; }
 #app-menu button { display: block; flex: none; min-height: 44px; padding: 10px 14px; text-align: left; border-color: transparent; }
 #app-menu button:hover { background: #35432b; }
 #app-menu button[aria-pressed="true"] { border-color: #536342; }
-body[data-app-mode="notes"] .practice-content, body[data-app-mode="notes"] .shortcuts, body[data-app-mode="notes"] .mobile-panels { display: none; }
-body[data-app-mode="notes"] .workspace { padding-bottom: 24px; }
-#notes-panel { max-width: 950px; margin: 0 auto; padding: 22px; }
-#notes-label { display: block; font-size: 18px; font-weight: 600; }
+#notes-panel { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow-y: auto; padding-top: 14px; }
+#notes-label { display: block; font-size: 16px; font-weight: 600; }
 .notes-hint, #notes-save-status { font-size: 13px; line-height: 1.5; color: var(--muted); margin-top: 8px; }
-#notes-text { display: block; width: 100%; min-height: 45dvh; margin-top: 18px; padding: 16px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; background: #111a14; color: inherit; font: 16px/1.7 "Segoe UI", system-ui, sans-serif; }
+#notes-text { display: block; flex: 1; width: 100%; min-height: 100px; margin-top: 14px; padding: 12px; resize: none; border: 1px solid var(--line); border-radius: 10px; background: #111a14; color: inherit; font: 16px/1.7 "Segoe UI", system-ui, sans-serif; }
 @media (max-width: 420px) {
   .app-header { gap: 8px; }
   .app-header #app-mode-title { font-size: 19px; }
   .app-navigation { gap: 10px; }
-  #notes-panel { padding: 16px; }
 }
 @media (max-width: 760px) {
   #install-app { padding: 8px; min-height: 44px; font-size: 12px; }

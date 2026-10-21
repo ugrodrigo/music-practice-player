@@ -52,16 +52,23 @@ window.LyricsPanel = (() => {
     return groups.some((entry) => entry.text) ? groups : [];
   }
 
-  function showTab(selection) {
-    const view = selection ? 'find' : 'lyrics';
+  function showTab(view, automatic = false) {
+    if (automatic && document.querySelector('.lyrics').dataset.view === 'notes') return;
     document.querySelector('.lyrics').dataset.view = view;
     $('settings').open = view === 'find';
     $('view').setAttribute('aria-pressed', String(view === 'lyrics'));
+    $('notes').setAttribute('aria-pressed', String(view === 'notes'));
     $('find').setAttribute('aria-pressed', String(view === 'find'));
     requestAnimationFrame(() => update(playbackTime, playbackDuration, true));
   }
-  $('view').addEventListener('click', () => showTab(false));
-  $('find').addEventListener('click', () => showTab(true));
+  $('view').addEventListener('click', () => showTab('lyrics'));
+  $('notes').addEventListener('click', () => showTab('notes'));
+  $('find').addEventListener('click', () => showTab('find'));
+  $('auto-help').addEventListener('click', () => {
+    const description = $('auto-description');
+    description.hidden = !description.hidden;
+    $('auto-help').setAttribute('aria-expanded', String(!description.hidden));
+  });
 
   function renderFollowMode() {
     $('mode').hidden = hasLyrics && timedLines.length > 0;
@@ -165,7 +172,7 @@ window.LyricsPanel = (() => {
   function cancel() {
     revision++;
     controller?.abort();
-    $('search').textContent = 'Find lyrics';
+    $('search').textContent = 'Load Lyrics';
     $('text').removeAttribute('aria-busy');
   }
 
@@ -188,7 +195,7 @@ window.LyricsPanel = (() => {
     fileKey = ''; album = ''; duration = 0;
     playbackTime = 0; playbackDuration = 0;
 
-    showTab(true);
+    showTab('find', true);
     $('artist').value = ''; $('title').value = '';
     updateGeniusLink();
     for (const id of ['artist', 'title', 'search']) $(id).disabled = true;
@@ -249,7 +256,7 @@ window.LyricsPanel = (() => {
       }
     } else $('text').textContent = record.instrumental ? 'Instrumental — no sung lyrics.' : record.plainLyrics || 'This record has no lyrics yet. Try another match.';
     $('text').hidden = false;
-    showTab(!hasLyrics);
+    showTab(hasLyrics ? 'lyrics' : 'find', true);
     $('text').scrollTop = 0;
     renderFollowMode();
     update(playbackTime, playbackDuration || duration, true);
@@ -309,7 +316,7 @@ window.LyricsPanel = (() => {
     const title = $('title').value.trim(), artist = $('artist').value.trim();
     clearLyrics();
     status('Looking for lyrics…');
-    $('search').textContent = 'Search again';
+    $('search').textContent = 'Loading lyrics…';
     const params = new URLSearchParams({ track_name: title });
     if (artist) params.set('artist_name', artist);
     try {
@@ -342,7 +349,7 @@ window.LyricsPanel = (() => {
     } catch (error) {
       if (version === revision && error.name !== 'AbortError') status(error.message || 'Lyrics lookup failed. Try again later.');
     } finally {
-      if (version === revision) $('search').textContent = 'Find lyrics';
+      if (version === revision) $('search').textContent = 'Load Lyrics';
     }
   }
 
@@ -362,7 +369,7 @@ window.LyricsPanel = (() => {
     updateGeniusLink();
     album = info.album;
     if ($('auto').checked && info.artist && info.title) findLyrics();
-    else status($('auto').checked ? 'Check the song title and add an artist for a more accurate match, then choose Find lyrics.' : 'Automatic lookup is off. Choose Find lyrics when you want to search online.');
+    else status($('auto').checked ? 'Check the song title and add an artist for a more accurate match, then choose Load Lyrics.' : 'Automatic lookup is off. Choose Load Lyrics when you want to search online.');
   }
 
   try { $('auto').checked = localStorage.getItem(autoKey) !== 'false'; } catch { /* Use the default. */ }
@@ -372,7 +379,7 @@ window.LyricsPanel = (() => {
     else if (fileKey && $('artist').value.trim() && $('title').value.trim()) findLyrics();
   });
   $('form').addEventListener('submit', (event) => { event.preventDefault(); $('artist').blur(); $('title').blur(); findLyrics(); });
-  for (const id of ['artist', 'title']) $(id).addEventListener('input', () => { cancel(); album = ''; updateGeniusLink(); $('results').hidden = true; status('Choose Find lyrics to search with these details.'); });
+  for (const id of ['artist', 'title']) $(id).addEventListener('input', () => { cancel(); album = ''; updateGeniusLink(); $('results').hidden = true; status('Choose Load Lyrics to search with these details.'); });
   const finishScrub = () => {
     scrubbing = false;
     update(playbackTime, playbackDuration, true);

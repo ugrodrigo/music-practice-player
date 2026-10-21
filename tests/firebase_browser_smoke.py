@@ -127,7 +127,7 @@ try:
         client.js("(async()=>{const sdk=await import('https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js');for(let i=0;i<100;i++){try{await sdk.getAuth().authStateReady();return;}catch{await new Promise(r=>setTimeout(r,50));}}throw Error('Auth startup');})()")
     alice = account('alice@example.test'); bob = account('bob@example.test')
     signin(a, 'alice@example.test', alice); signin(b, 'alice@example.test', alice)
-    a.js("document.getElementById('mode-notes').click();const field=document.getElementById('notes-text');field.value='From desktop';field.dispatchEvent(new Event('input'))")
+    a.js("document.getElementById('lyrics-notes').click();const field=document.getElementById('notes-text');field.value='From desktop';field.dispatchEvent(new Event('input'))")
     wait(b, "document.getElementById('notes-text').value === 'From desktop'", 'Notes arrive in second profile')
     wait(a, '!PracticeSync.state().pending', 'First note acknowledged')
     print('PASS: real SDK authentication, owner rules, transactions and note snapshots across separate profiles', flush=True)

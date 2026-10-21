@@ -35,7 +35,6 @@
         <nav id="app-menu" class="app-modes" aria-label="App navigation" hidden>
           <button id="mode-practice" type="button" aria-pressed="true">Practice</button>
           <button id="mode-looper" type="button" aria-pressed="false">Looper</button>
-          <button id="mode-notes" type="button" aria-pressed="false">Notes</button>
           <button id="mode-settings" type="button" aria-pressed="false">Configurations</button>
         </nav>
       </div>
@@ -74,13 +73,6 @@
       <div class="lyrics-size-controls" aria-label="Lyrics display"><span class="lyrics-size-label">Text size</span><button id="lyrics-smaller" type="button" aria-label="Smaller lyrics">A-</button><span id="lyrics-size" aria-live="polite">16px</span><button id="lyrics-larger" type="button" aria-label="Larger lyrics">A+</button></div>
       <div id="lyrics-height-controls"><label for="lyrics-height-slider">Box height <span id="lyrics-height-value">Auto</span></label><input id="lyrics-height-slider" type="range" min="40" max="100" step="5" value="100"><button id="lyrics-height-auto" type="button">Auto</button></div>
       </section>
-
-    <section id="notes-panel" class="panel" aria-labelledby="notes-label" hidden>
-      <label id="notes-label" for="notes-text">Your notes</label>
-      <p class="notes-hint">A space for practice reminders, chords and ideas. Sign in through Configurations to sync across devices.</p>
-      <textarea id="notes-text" maxlength="30000" placeholder="Write your notes here..." aria-describedby="notes-save-status"></textarea>
-      <p id="notes-save-status" role="status">Notes save automatically.</p>
-    </section>
 
     <div class="practice-content">
     <section class="player panel" aria-label="Audio player">
@@ -141,23 +133,35 @@
       <p class="cue-footnote">Set a cue while listening. Jump back as often as you need.</p>
     </section>
 
-    <aside class="lyrics panel" aria-labelledby="lyrics-heading">
-      <div class="lyrics-heading"><button id="lyrics-view" type="button" aria-pressed="true">Lyrics</button><a id="lyrics-genius" target="_blank" rel="noopener noreferrer" hidden>Find on Genius</a><button id="lyrics-find" type="button" aria-pressed="false">Find lyrics</button></div>
+    <aside class="lyrics panel" data-view="lyrics" aria-labelledby="lyrics-heading">
+      <div class="lyrics-heading" role="group" aria-label="Lyrics panel views"><button id="lyrics-view" type="button" aria-pressed="true">Lyrics</button><button id="lyrics-notes" type="button" aria-pressed="false">Notes</button><button id="lyrics-find" type="button" aria-pressed="false">Search</button></div>
       <h2 id="lyrics-heading" class="sr-only">Lyrics</h2>
       <p id="lyrics-mode" class="lyrics-note">Waiting for lyrics</p>
       <details id="lyrics-settings" open><summary class="sr-only">Find lyrics</summary>
-      <label class="lyrics-auto"><input id="lyrics-auto" type="checkbox" checked> Auto-find lyrics</label>
-      <p class="lyrics-note">Looks up song details online. Your audio stays local.</p>
       <form id="lyrics-form">
         <label for="lyrics-artist">Artist</label><input id="lyrics-artist" type="text" placeholder="e.g. Red Hot Chili Peppers" maxlength="200" autocomplete="off" disabled>
         <label for="lyrics-title">Song title</label><input id="lyrics-title" type="text" placeholder="e.g. Scar Tissue" maxlength="200" autocomplete="off" required disabled>
-        <button id="lyrics-search" class="button button-outline" type="submit" disabled>Find lyrics</button>
+        <div class="lyrics-auto-option">
+          <label class="lyrics-auto"><input id="lyrics-auto" type="checkbox" checked><span>Auto-find lyrics</span></label>
+          <button id="lyrics-auto-help" type="button" title="Looks up song details online. Your audio stays local." aria-label="About auto-find lyrics" aria-controls="lyrics-auto-description" aria-expanded="false">?</button>
+        </div>
+        <p id="lyrics-auto-description" class="lyrics-note" hidden>Looks up song details online. Your audio stays local.</p>
+        <div class="lyrics-actions">
+          <a id="lyrics-genius" class="button button-outline" target="_blank" rel="noopener noreferrer" hidden>Lyrics Meaning</a>
+          <button id="lyrics-search" class="button button-primary" type="submit" disabled>Load Lyrics</button>
+        </div>
       </form>
       </details>
       <p id="lyrics-status" class="lyrics-note" role="status" aria-live="polite">Load a song to find its lyrics.</p>
       <div id="lyrics-results" class="lyrics-results" aria-label="Matching songs" hidden></div>
       <p id="lyrics-match" class="lyrics-match" hidden></p>
       <div id="lyrics-text" class="lyrics-text" tabindex="0" aria-label="Song lyrics" hidden></div>
+      <section id="notes-panel" aria-labelledby="notes-label">
+        <label id="notes-label" for="notes-text">Your notes</label>
+        <p class="notes-hint">Practice reminders, chords and ideas. Sign in through Configurations to sync across devices.</p>
+        <textarea id="notes-text" maxlength="30000" placeholder="Write your notes here..." aria-describedby="notes-save-status"></textarea>
+        <p id="notes-save-status" role="status">Notes save automatically.</p>
+      </section>
     </aside>
     </div>
 
