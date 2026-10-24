@@ -12,6 +12,7 @@
   <script src="src/js/lyrics.js" defer></script>
   <script src="src/js/waveform.js" defer></script>
   <script src="src/js/audio-store.js" defer></script>
+  <script src="src/js/song-library-store.js" defer></script>
   <script src="vendor/signalsmith/SignalsmithStretch.js" defer></script>
   <script src="src/js/practice-audio.js" defer></script>
   <script src="src/js/sync-store.js" defer></script>
@@ -21,6 +22,7 @@
   <script src="src/js/looper-io.js" defer></script>
   <script src="src/js/looper.js" defer></script>
   <script src="src/js/navigation.js" defer></script>
+  <script src="src/js/song-library.js" defer></script>
   <script src="src/js/firebase-sync.js" type="module"></script>
   <script src="src/js/pwa.js" defer></script>
 </head>
@@ -34,6 +36,7 @@
         </button>
         <nav id="app-menu" class="app-modes" aria-label="App navigation" hidden>
           <button id="mode-practice" type="button" aria-pressed="true">Practice</button>
+          <button id="mode-songs" type="button" aria-pressed="false">Songs</button>
           <button id="mode-looper" type="button" aria-pressed="false">Looper</button>
           <button id="mode-settings" type="button" aria-pressed="false">Configurations</button>
         </nav>
@@ -51,7 +54,7 @@
           <p id="account-name">Guest</p>
           <p id="sync-account">Not signed in</p>
           <p id="sync-status" role="status">Notes and cues are saved on this device.</p>
-          <p class="account-intro">Sign in to sync notes and cues across devices. Audio and recordings stay local.</p>
+          <p class="account-intro">Sign in to sync notes and cues. Songs go to Drive only when you choose Save to Drive; recordings stay local.</p>
           <button id="sync-signin" type="button">Sign in with Google</button>
           <div id="account-signed-in" hidden>
             <details id="account-sync-details">
@@ -70,7 +73,13 @@
     </header>
     <nav class="mobile-panels" aria-label="Practice panel"><button id="show-lyrics" type="button" aria-pressed="true">Lyrics</button><button id="show-cues" type="button" aria-pressed="false">Cues</button><button id="mobile-open-file" class="button button-outline" type="button">Open audio file</button></nav>
     </div>
-    <div class="install-row"><span id="offline-status" hidden>Local audio stays on your device.</span><button id="update-app" class="button button-outline" type="button" hidden>Update &amp; reload</button><span id="update-status" role="status" aria-live="polite"></span></div>
+    <div class="install-row"><span id="offline-status" hidden>Selected songs are available offline.</span><button id="update-app" class="button button-outline" type="button" hidden>Update &amp; reload</button><span id="update-status" role="status" aria-live="polite"></span></div>
+
+    <dialog id="audio-source-dialog" aria-labelledby="audio-source-heading">
+      <div class="audio-source-heading"><h2 id="audio-source-heading">Open a song</h2><button id="audio-source-close" type="button" aria-label="Close">×</button></div>
+      <p>Choose where to open your audio from.</p>
+      <div class="audio-source-options"><button id="audio-source-device" type="button"><strong>This device</strong><span>Browse a local audio file</span></button><button id="audio-source-library" type="button"><strong>Offline songs</strong><span>Saved on this device</span></button><button id="audio-source-drive" type="button"><strong>Google Drive</strong><span>Open your app folder</span></button></div>
+    </dialog>
 
       <section id="lyrics-display-config" class="panel" aria-labelledby="config-heading" hidden>
       <h2 id="config-heading" class="config-heading">Configurations</h2>
@@ -85,6 +94,19 @@
       <div class="screen-awake-row"><label><input id="keep-screen-awake" type="checkbox" checked> Keep screen on</label><button id="screen-awake-status" type="button" aria-live="polite" hidden></button></div>
       <div class="lyrics-size-controls" aria-label="Lyrics display"><span class="lyrics-size-label">Text size</span><button id="lyrics-smaller" type="button" aria-label="Smaller lyrics">A-</button><span id="lyrics-size" aria-live="polite">16px</span><button id="lyrics-larger" type="button" aria-label="Larger lyrics">A+</button></div>
       <div id="lyrics-height-controls"><label for="lyrics-height-slider">Box height <span id="lyrics-height-value">Auto</span></label><input id="lyrics-height-slider" type="range" min="40" max="100" step="5" value="100"><button id="lyrics-height-auto" type="button">Auto</button></div>
+      </section>
+
+      <section id="songs-panel" class="panel" aria-labelledby="songs-heading" hidden>
+        <div class="songs-heading"><div><p class="eyebrow">YOUR LIBRARY</p><h2 id="songs-heading">Songs</h2></div></div>
+        <p>Choose which songs to keep offline on this device. Connect Drive to upload songs, or choose existing files you added there yourself.</p>
+        <div class="songs-file-actions"><button id="songs-add" type="button">Add offline file</button><button id="songs-upload" type="button">Upload file to Drive</button><button id="songs-save-current" type="button">Keep current song offline</button><button id="songs-upload-current" type="button">Save current song to Drive</button></div>
+        <input id="songs-file-input" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.opus" hidden>
+        <input id="songs-upload-input" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.opus" hidden>
+        <div class="songs-controls"><button id="songs-connect" type="button">Connect Google Drive</button><button id="songs-refresh" type="button" hidden>Refresh Drive</button><button id="songs-pick" type="button" hidden>Choose existing Drive files</button><label for="songs-limit">Offline limit <select id="songs-limit"><option value="250">250 MB</option><option value="500" selected>500 MB</option><option value="1024">1 GB</option><option value="2048">2 GB</option></select></label></div>
+        <p id="songs-usage">Checking offline storage...</p>
+        <p id="songs-status" role="status" aria-live="polite"></p>
+        <h3>Offline on this device</h3><div id="songs-local-list" class="songs-list"></div>
+        <h3 id="songs-drive-heading" tabindex="-1">Google Drive</h3><div id="songs-drive-list" class="songs-list"><p>Connect Drive to see your songs.</p></div>
       </section>
 
     <div class="practice-content">
@@ -136,7 +158,7 @@
         </div>
       </div>
       </div>
-      <p id="status" class="status" role="status" aria-live="polite">Ready when you are. Your audio stays on this device.</p>
+      <p id="status" class="status" role="status" aria-live="polite">Ready when you are. Songs are uploaded only when you choose.</p>
       <p id="storage-warning" class="warning" role="status" hidden></p>
     </section>
 
@@ -171,7 +193,7 @@
       <div id="lyrics-text" class="lyrics-text" tabindex="0" aria-label="Song lyrics" hidden></div>
       <section id="notes-panel" aria-labelledby="notes-label">
         <h3 id="notes-label">Your notes</h3>
-        <p class="notes-hint">Practice reminders, chords and ideas. Sign in through Configurations to sync across devices.</p>
+        <p class="notes-hint">Practice reminders, chords and ideas. Sign in through Account to sync across devices.</p>
         <div id="notes-toolbar" role="toolbar" aria-label="Note formatting">
           <button type="button" data-note-command="bold" aria-label="Bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
           <button type="button" data-note-command="italic" aria-label="Italic" title="Italic (Ctrl+I)"><em>I</em></button>

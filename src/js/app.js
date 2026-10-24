@@ -487,6 +487,7 @@
     else if (activeFile && ready) saveLastAudio(activeFile);
   });
   $('forget-audio').addEventListener('click', forgetLastAudio);
+  window.PracticePlayer = { get file() { return activeFile; }, load(file) { loadFile(file, true); document.getElementById('mode-practice').click(); } };
 
   function loadFile(file, restored = false) {
     if (!file) return;
@@ -566,8 +567,26 @@
     current.load();
   }
 
-  $("mobile-open-file").addEventListener("click", () => ui["file-input"].click());
-  ui["open-file"].addEventListener("click", () => ui["file-input"].click());
+  const audioSourceDialog = $('audio-source-dialog');
+  const openAudioSource = () => audioSourceDialog.showModal();
+  $('mobile-open-file').addEventListener('click', openAudioSource);
+  ui['open-file'].addEventListener('click', openAudioSource);
+  $('audio-source-close').addEventListener('click', () => audioSourceDialog.close());
+  audioSourceDialog.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); audioSourceDialog.close(); }
+  });
+  $('audio-source-device').addEventListener('click', () => { audioSourceDialog.close(); ui['file-input'].click(); });
+  $('audio-source-library').addEventListener('click', () => {
+    audioSourceDialog.close();
+    $('mode-songs').click();
+    $('songs-heading').scrollIntoView({ block: 'start' });
+  });
+  $('audio-source-drive').addEventListener('click', () => {
+    audioSourceDialog.close();
+    $('mode-songs').click();
+    $('songs-drive-heading').focus();
+    if (!$('songs-connect').hidden) $('songs-connect').click();
+  });
   ui["file-input"].addEventListener("change", () => {
     loadFile(ui["file-input"].files[0]);
     ui["file-input"].value = "";
@@ -632,6 +651,7 @@
 
   document.addEventListener("keydown", (event) => {
     if (document.body.dataset.appMode !== 'practice') return;
+    if (audioSourceDialog.open) return;
     const target = event.target;
     if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey ||
       target.closest('input:not([type="range"]), textarea, [contenteditable]:not([contenteditable="false"])')) return;

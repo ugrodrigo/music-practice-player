@@ -6,7 +6,7 @@ A local, keyboard-first audio player for learning songs. Save cue points in page
 
 Open `index.html` directly in Chrome or Edge. No installation, server, or build step is needed. Audio playback works offline; fetching new lyrics requires internet access.
 
-Drag an audio file anywhere onto the page, or click **Open audio file**. MP3, WAV, M4A, and other browser-supported audio formats are accepted; actual playback depends on the codec supported by your browser. Your audio stays on your device and is never uploaded.
+Drag an audio file anywhere onto the page, or click **Open audio file** and choose **This device**, **Offline songs**, or **Google Drive**. The Drive choice connects your signed-in account if needed and opens the app's song list. MP3, WAV, M4A, and other browser-supported audio formats are accepted; actual playback depends on the codec supported by your browser. Opening a file does not upload it; saving to Drive is a separate action in Songs.
 
 ## Preview local edits without PWA caching
 
@@ -21,14 +21,20 @@ The same app can be installed as a Progressive Web App (PWA). On phones, **Lyric
 1. Publish this folder on an HTTPS static host. For this repository, GitHub Pages can serve the `main` branch's root folder: repository **Settings → Pages → Build and deployment → Deploy from a branch → main → / (root)**. See [GitHub's publishing instructions](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site). These local changes must be pushed before the hosted site can include them; implementation does not publish the site automatically.
 2. Open the published URL in Chrome on Android while online. With GitHub Pages enabled for this repository, the expected URL is `https://ugrodrigo.github.io/music-practice-player/`.
 3. Let the initial page finish loading, then tap **Install app**. If that button is unavailable, use Chrome's menu to install/add the app to your home screen.
-4. Open an audio file stored on your phone. Fetch its lyrics once while online if you want them available offline.
+4. Tap **Open audio file** and choose **This device**, **Offline songs**, or **Google Drive**. Fetch its lyrics once while online if you want them available offline.
 5. You can now reopen the app without internet; the last saved audio file restores automatically, paused.
 
-Playback, speed controls, cues, waveform analysis, and previously cached lyrics work offline. New lyrics searches and Genius require internet. Audio is never uploaded. With **Remember last audio on this device** enabled (the default), one local copy is stored in IndexedDB and restored automatically after reopening. Cloud-only files need to be downloaded to the phone first. The lyrics cache retains the last ten selected records.
+Playback, speed controls, cues, waveform analysis, and previously cached lyrics work offline. New lyrics searches and Genius require internet. With **Remember last audio on this device** enabled (the default), the latest opened audio is stored in IndexedDB and restored automatically. Songs explicitly kept offline in **Songs** are also stored on this device. The lyrics cache retains the last ten selected records.
 
-Signed-out cues and lyrics belong to this browser and site address. Google sign-in enables notes and cue sync through Firebase; existing local notes and cues require an explicit import. See [Firebase setup and testing](docs/FIREBASE_SETUP.md). Lyrics and audio remain local. Clearing site data removes local copies, pending edits and the offline app cache. Background/lock-screen playback and installation still need verification on a physical Android phone.
+Signed-out cues and lyrics belong to this browser and site address. Google sign-in enables notes and cue sync through Firebase; existing local notes and cues require an explicit import. See [Firebase setup and testing](docs/FIREBASE_SETUP.md). Audio is uploaded only through an explicit Save to Drive action. Clearing site data removes local copies, pending edits and the offline app cache. Background/lock-screen playback and installation still need verification on a physical Android phone.
 
 The round Account button in the header opens sign-in, sign-out, sync status, import and conflict review. A signed-in Google profile photo appears when available, with an initial as a fallback. Configurations contains only app preferences.
+
+## Songs and offline copies
+
+Open **Songs** in the app navigation. **Add offline file** and **Keep current song offline** save only selected songs to this device; **Play** opens a saved song without a folder picker. Choose an offline limit of 250 MB, 500 MB, 1 GB or 2 GB. The page shows the selected songs' total size and the browser's approximate storage use. When the limit or browser quota is reached, remove an offline copy or free device space; the app never silently deletes a selected song. The existing **Remember last audio** option still keeps one recent song separately. Offline songs belong to the browser profile, so anyone using that profile can access them even after sign-out.
+
+After Google sign-in, **Connect Google Drive** asks for the limited `drive.file` permission and creates a private app folder in that account. Files manually placed in Drive are not automatically visible under that permission: use **Choose existing Drive files** to select them with Google's picker once. **Upload file to Drive** sends an audio file directly, without requiring an offline copy; **Save current song to Drive** sends the open song. **Save to Drive** on an offline row uploads that copy. On another device, connect the same account to **Play** a Drive song or **Keep offline** to copy it onto that device. **Remove from Drive** is offered only for files uploaded by this app; it asks for confirmation and leaves offline copies on devices intact. Drive access must be reconnected after reload or expiry; the token is never stored on disk. The app does not share the folder publicly or automatically delete songs in Drive. Cloud project setup is described in [Firebase setup and testing](docs/FIREBASE_SETUP.md). Test real uploads only on localhost or an authorized HTTPS origin.
 
 The Notes tab supports bold, italic, underline, four text sizes, and clearing formatting. Select text before using the toolbar, or use Ctrl+B, Ctrl+I, and Ctrl+U while typing. Notes save automatically and formatted notes sync with the same account. Existing plain notes remain readable. Press Escape while editing a note or using a text field or selector to return to player keyboard shortcuts.
 
@@ -108,7 +114,7 @@ Run this workflow in Chrome and Edge:
 9. Check a cue at zero, resetting a cue, seeking at track boundaries, changing speeds, and typing shortcut characters into a cue name.
 10. Load another file and confirm its own cues appear. Try WAV and M4A samples and an unreadable audio file.
 
-The app deliberately excludes loops, A/B repeat, streaming services, and cloud features.
+The app does not provide music streaming services. Songs in its Drive library are files you explicitly upload.
 
 ### Lyrics acceptance test
 

@@ -1,8 +1,69 @@
 # Firebase notes and cue sync
 
-This stage adds Google sign-in, account-scoped notes, and per-cue sync. Audio files,
-looper recordings, lyrics and device preferences remain local. Google Drive and
-shared preference sync are follow-up work. No Analytics SDK is loaded.
+Google sign-in syncs account-scoped notes and cues. The optional Songs library
+adds explicit audio uploads to a private app-created Google Drive folder and
+selected offline copies on each device. Looper recordings, lyrics and device
+preferences remain local. No Analytics SDK is loaded.
+
+## Song library and Drive setup
+
+1. The `music-practice-player` Google Cloud project has **Google Drive API** enabled
+   and declares the non-sensitive `https://www.googleapis.com/auth/drive.file`
+   scope on its OAuth consent screen. **Google Picker API** is also enabled. A
+   separate public Picker key is limited to that API and the published origin,
+   localhost port 8766, and `docs.google.com` (where Picker renders). If the OAuth app is in
+   Testing mode, add your Google account as a test user. Keep the existing
+   Firebase Google sign-in provider and its web OAuth client; no client secret
+   belongs in this repository.
+2. Deploy the app on its authorized HTTPS origin, or use the localhost preview
+   on port 8766 (the port allowed by the project's browser API key).
+   The raw `file://` page cannot complete Firebase Google sign-in.
+3. Sign in from Account. Open **Songs** from app navigation, then choose
+   **Connect Google Drive**. The app asks for Drive permission separately. It
+   creates a private `Music Practice Player` folder in your own Drive if needed.
+   It never creates an `anyone` sharing permission or scans your other Drive files.
+   **Open audio file -> Google Drive** connects and opens this list; **Offline
+   songs** opens selected local copies, and **This device** opens the browser's
+   local file picker.
+   Use **Choose existing Drive files** to authorize audio that you manually put
+   into the folder. The app cannot see such files just because they are in its
+   folder: `drive.file` requires an explicit Picker selection. Files selected
+   outside the app folder may also appear in the library. The app only offers
+   **Remove from Drive** for files it uploaded itself.
+4. Use **Upload file to Drive** to send an audio file without an offline copy,
+   or **Save current song to Drive** for the open song. **Add offline file** and
+   **Keep current song offline** save a local copy. **Save to Drive** on an
+   offline row uploads that copy. On another device, sign in to the same
+   account, connect Drive, then choose **Play** or **Keep offline**. **Remove
+   from Drive** confirms before deleting a cloud file and leaves offline copies.
+
+The Drive access token is kept only in page memory, expires from the app after
+45 minutes, and is cleared on account change. Reconnect Drive after reload or
+expiry. The Drive folder and files remain in the account until removed with
+**Remove from Drive** or in Google Drive. The app does not automatically delete songs.
+
+Offline songs are stored in a separate IndexedDB database on this device, alongside
+the legacy single last-audio copy. The user chooses a 250 MB to 2 GB offline
+budget; the app checks that budget and the browser's approximate available
+space before copying a file. Failed writes leave existing copies untouched.
+Removing an offline copy never deletes its Drive copy. Browser site-data clearing,
+private browsing, or storage eviction can still remove offline copies, so Drive
+or the original file is the backup. Local browser data is not encrypted or
+protected by Google sign-in; anyone using the same browser profile can open
+offline songs. Clear site data on a shared device.
+
+To validate Drive access, test with two devices on the same account, then a
+different Google account. The second account must not see the first account's
+folder or songs. Test an offline download with networking disabled, low storage,
+cancelled consent, token expiry, and Brave with Shields enabled. Google Drive
+integration cannot be exercised by local mock tests alone.
+
+Live check on 2026-10-24 at the authorized `http://localhost:8766` preview:
+Google sign-in and separate `drive.file` consent completed, the app created its
+Drive folder, uploaded a generated 4 KB WAV directly without an offline copy,
+listed it, downloaded it into IndexedDB, played that offline copy, then removed
+both test copies. This checks one account and one browser; repeat on a second
+physical device before relying on cross-device audio access.
 
 ## Console setup
 
@@ -32,7 +93,8 @@ The web app requires HTTP(S); do not test Firebase by opening index.html directl
    A conflicting import preserves both versions for review under Account → Sync options.
 4. Edit a note or cue and wait for “Notes and cues are synced.”
 5. Sign in to the same account in another browser/device running this version.
-   Open the identical audio file to view its cues. Audio itself is not uploaded.
+   Open the identical audio file to view its cues. Notes/cue sync does not upload
+   audio; saving a song to Drive is a separate action in Songs.
 6. Test offline edits, reconnect, and review any conflicts under Account → Sync options.
 7. Sign out: the app returns to the separate guest notes and cues. Pending account
    changes stay locally under that account and resume only when it signs in again.

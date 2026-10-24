@@ -1,6 +1,6 @@
 :root { color-scheme: dark; font-family: "Segoe UI", system-ui, sans-serif; color: #eeeee8; background: #111413; --muted: #979e98; --line: #333b34; --accent: #d8ee96; }
 * { box-sizing: border-box; }
-body { --page-background: radial-gradient(ellipse at 90% 0%, #222b20 0, transparent 45%) #111413; margin: 0; min-width: 320px; background: var(--page-background) fixed; overflow-x: clip; }
+body { --page-background: radial-gradient(ellipse at 90% 0%, #222b20 0, transparent 45%) #111413; margin: 0; min-width: 0; background: var(--page-background) fixed; overflow-x: clip; }
 button, input, select { font: inherit; }
 button, select, input[type="range"] { cursor: pointer; }
 button { color: inherit; }
@@ -431,6 +431,41 @@ body[data-app-mode="looper"] .practice-content, body[data-app-mode="looper"] .sh
 body[data-app-mode="settings"] .practice-content, body[data-app-mode="settings"] .shortcuts, body[data-app-mode="settings"] .mobile-panels { display: none; }
 #lyrics-display-config { padding: 22px; max-width: 760px; width: 100%; margin: 0 auto; overflow: visible; border: 1px solid var(--line); }
 body[data-app-mode="settings"] .workspace { padding-bottom: 24px; }
+body[data-app-mode="songs"] .practice-content, body[data-app-mode="songs"] .shortcuts, body[data-app-mode="songs"] .mobile-panels { display: none; }
+body[data-app-mode="songs"] .workspace { padding-bottom: 24px; }
+#audio-source-dialog { width: min(420px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 20px; border: 1px solid #536342; border-radius: 14px; background: #1a1f1c; color: #e5e8dd; box-shadow: 0 18px 48px #000a; }
+#audio-source-dialog::backdrop { background: #000a; }
+.audio-source-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.audio-source-heading h2 { margin: 0; font-size: 20px; }
+#audio-source-close { min-width: 44px; min-height: 44px; border: 0; border-radius: 8px; background: transparent; color: inherit; font-size: 24px; }
+#audio-source-dialog p { margin: 8px 0 16px; color: var(--muted); font-size: 13px; }
+.audio-source-options { display: grid; gap: 10px; }
+.audio-source-options button { display: grid; gap: 4px; min-height: 68px; padding: 12px 14px; text-align: left; border: 1px solid #536342; border-radius: 10px; background: #293229; color: inherit; }
+.audio-source-options button:hover, .audio-source-options button:focus-visible { border-color: var(--accent); }
+.audio-source-options span { color: var(--muted); font-size: 12px; }
+#songs-panel { width: min(100%, 880px); margin: 12px auto; padding: 22px; }
+#songs-panel h2 { margin: 0; font-size: 24px; }
+#songs-panel h3 { margin: 24px 0 10px; font-size: 17px; }
+#songs-panel > p { color: var(--muted); line-height: 1.5; }
+.songs-heading, .songs-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.songs-heading { justify-content: space-between; }
+.songs-heading .eyebrow { margin-bottom: 2px; }
+.songs-file-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.songs-controls { margin: 16px 0; }
+.songs-controls label { display: inline-flex; align-items: center; gap: 8px; }
+#songs-panel button, #songs-panel select { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #293229; color: inherit; }
+#songs-panel button:hover:not(:disabled) { border-color: var(--accent); }
+#songs-panel button:disabled { opacity: .55; }
+#songs-panel select { font: inherit; }
+#songs-status { min-height: 1.5em; color: var(--accent) !important; }
+.songs-list { display: grid; gap: 8px; }
+.songs-list > p { color: var(--muted); }
+.song-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #1a1f1c; }
+.song-info { display: grid; gap: 4px; min-width: 0; flex: 1 1 180px; }
+.song-info strong { overflow-wrap: anywhere; }
+.song-info small { color: var(--muted); }
+.song-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 480px) { #songs-panel { padding: 16px; } .song-actions { width: 100%; } .song-actions button { flex: 1; } }
 
 .sticky-header { position: relative; z-index: 25; isolation: isolate; }
 @media (max-width: 760px) { .sticky-header { position: fixed; } }

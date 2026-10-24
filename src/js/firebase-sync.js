@@ -7,6 +7,20 @@ let auth, api, db, initializing, authReady = false;
 const avatar = $('account-avatar-image');
 const avatarFallback = $('account-avatar-fallback');
 let avatarURL = '';
+window.PracticeDriveAuth = {
+  get user() { return auth?.currentUser || null; },
+  async requestToken() {
+    if (!auth?.currentUser) throw new Error('Sign in with Google from the Account menu first.');
+    const user = auth.currentUser;
+    const provider = new api.GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/drive.file');
+    const result = await api.reauthenticateWithPopup(user, provider);
+    if (result.user.uid !== user.uid) throw new Error('The Google account changed.');
+    const token = api.GoogleAuthProvider.credentialFromResult(result)?.accessToken;
+    if (!token) throw new Error('Google Drive permission was not granted.');
+    return token;
+  },
+};
 avatar.addEventListener('load', () => {
   if (avatarURL && avatar.currentSrc === avatarURL) { avatar.hidden = false; avatarFallback.hidden = true; }
 });

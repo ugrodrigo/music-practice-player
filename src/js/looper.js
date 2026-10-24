@@ -355,10 +355,12 @@
     if (mode !== 'looper') { io.stopTest(); stopPlayback(); if (dirty) persist(); }
     document.body.dataset.appMode = mode; $('panel').hidden = mode !== 'looper';
     document.getElementById('lyrics-display-config').hidden = mode !== 'settings';
-    for (const name of ['practice', 'looper', 'settings']) document.getElementById(`mode-${name}`).setAttribute('aria-pressed', String(name === mode));
+    document.getElementById('songs-panel').hidden = mode !== 'songs';
+    for (const name of ['practice', 'songs', 'looper', 'settings']) document.getElementById(`mode-${name}`).setAttribute('aria-pressed', String(name === mode));
     document.dispatchEvent(new Event('appmodechange')); render();
   }
   document.getElementById('mode-practice').addEventListener('click', () => setMode('practice'));
+  document.getElementById('mode-songs').addEventListener('click', () => setMode('songs'));
   document.getElementById('mode-looper').addEventListener('click', () => setMode('looper'));
   document.getElementById('mode-settings').addEventListener('click', () => setMode('settings'));
   $('record').addEventListener('click', recordNew);
