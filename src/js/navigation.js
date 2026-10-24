@@ -4,21 +4,45 @@
   const toggle = document.getElementById('app-menu-toggle');
   const menu = document.getElementById('app-menu');
   const title = document.getElementById('app-mode-title');
+  const accountToggle = document.getElementById('account-toggle');
+  const accountPanel = document.getElementById('account-panel');
   function closeMenu(restoreFocus = false) {
     menu.hidden = true;
     toggle.setAttribute('aria-expanded', 'false');
     if (restoreFocus) toggle.focus();
   }
+  function closeAccount(restoreFocus = false) {
+    accountPanel.hidden = true;
+    accountToggle.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) accountToggle.focus();
+  }
   toggle.addEventListener('click', () => {
+    closeAccount();
     menu.hidden = !menu.hidden;
     toggle.setAttribute('aria-expanded', String(!menu.hidden));
     if (!menu.hidden) menu.querySelector('[aria-pressed="true"]').focus();
   });
+  accountToggle.addEventListener('click', () => {
+    const opening = accountPanel.hidden;
+    closeMenu();
+    accountPanel.hidden = !opening;
+    accountToggle.setAttribute('aria-expanded', String(opening));
+    if (opening) accountPanel.querySelector('h2').focus({ preventScroll: true });
+  });
   document.addEventListener('pointerdown', event => {
     if (!event.target.closest('.app-navigation')) closeMenu();
+    if (!event.target.closest('.header-actions')) closeAccount();
   });
   document.addEventListener('focusin', event => {
     if (!event.target.closest('.app-navigation')) closeMenu();
+    if (!event.target.closest('.header-actions')) closeAccount();
+  });
+  accountPanel.querySelector('h2').tabIndex = -1;
+  accountPanel.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); closeAccount(true); }
+  });
+  accountToggle.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !accountPanel.hidden) { event.preventDefault(); closeAccount(true); }
   });
   document.querySelector('.app-navigation').addEventListener('keydown', event => {
     if (menu.hidden) return;
@@ -36,6 +60,7 @@
   document.addEventListener('appmodechange', () => {
     title.textContent = menu.querySelector('[aria-pressed="true"]').textContent;
     closeMenu(menu.contains(document.activeElement));
+    closeAccount();
   });
 
   const notes = document.getElementById('notes-text');

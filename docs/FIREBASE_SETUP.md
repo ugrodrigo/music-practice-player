@@ -27,13 +27,13 @@ The web app requires HTTP(S); do not test Firebase by opening index.html directl
 1. While signed out, open songs whose old cues you want to migrate. Loading a song
    identifies it using SHA-256 of the audio file bytes. Identical renamed copies
    share cues; re-encoded or edited copies are different tracks.
-2. Open Configurations → Account & sync → Sign in with Google.
+2. Tap the round Account button in the header → Sign in with Google.
 3. Explicitly import the device's local notes and identified cues if desired.
-   A conflicting import preserves both versions for review in Configurations.
+   A conflicting import preserves both versions for review under Account → Sync options.
 4. Edit a note or cue and wait for “Notes and cues are synced.”
 5. Sign in to the same account in another browser/device running this version.
    Open the identical audio file to view its cues. Audio itself is not uploaded.
-6. Test offline edits, reconnect, and review any conflicts in Configurations.
+6. Test offline edits, reconnect, and review any conflicts under Account → Sync options.
 7. Sign out: the app returns to the separate guest notes and cues. Pending account
    changes stay locally under that account and resume only when it signs in again.
 

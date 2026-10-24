@@ -39,7 +39,34 @@
         </nav>
       </div>
       <h1 id="app-mode-title">Practice</h1>
-      <button id="install-app" class="button button-outline" type="button" aria-label="Install app" hidden>Install<span class="install-app-suffix"> app</span></button>
+      <div class="header-actions">
+        <button id="install-app" class="button button-outline" type="button" aria-label="Install app" hidden>Install<span class="install-app-suffix"> app</span></button>
+        <button id="account-toggle" type="button" aria-label="Open account menu" aria-expanded="false" aria-controls="account-panel" title="Account">
+          <img id="account-avatar-image" alt="" referrerpolicy="no-referrer" hidden>
+          <span id="account-avatar-fallback" aria-hidden="true"><svg id="account-guest-icon" viewBox="0 0 24 24" width="24" height="24" fill="none"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4.5 20c.4-4.1 3-6.3 7.5-6.3s7.1 2.2 7.5 6.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span id="account-initial" hidden></span></span>
+          <span id="account-attention" aria-hidden="true" hidden>!</span>
+        </button>
+        <section id="account-panel" aria-labelledby="account-heading" hidden>
+          <h2 id="account-heading">Account</h2>
+          <p id="account-name">Guest</p>
+          <p id="sync-account">Not signed in</p>
+          <p id="sync-status" role="status">Notes and cues are saved on this device.</p>
+          <p class="account-intro">Sign in to sync notes and cues across devices. Audio and recordings stay local.</p>
+          <button id="sync-signin" type="button">Sign in with Google</button>
+          <div id="account-signed-in" hidden>
+            <details id="account-sync-details">
+              <summary>Sync options</summary>
+              <div class="account-sync-actions">
+                <button id="sync-retry" type="button">Retry sync</button>
+                <button id="sync-import" type="button" hidden>Import this device’s notes and cues</button>
+              </div>
+              <p>To import older cues, open their songs while signed out first. Signing out returns to your separate local notes.</p>
+              <div id="sync-conflicts"></div>
+            </details>
+            <button id="sync-signout" type="button">Sign out</button>
+          </div>
+        </section>
+      </div>
     </header>
     <nav class="mobile-panels" aria-label="Practice panel"><button id="show-lyrics" type="button" aria-pressed="true">Lyrics</button><button id="show-cues" type="button" aria-pressed="false">Cues</button><button id="mobile-open-file" class="button button-outline" type="button">Open audio file</button></nav>
     </div>
@@ -47,22 +74,8 @@
 
       <section id="lyrics-display-config" class="panel" aria-labelledby="config-heading" hidden>
       <h2 id="config-heading" class="config-heading">Configurations</h2>
-      <section class="sync-settings" aria-labelledby="sync-heading">
-        <h3 id="sync-heading">Account &amp; sync</h3>
-        <p id="sync-account">Not signed in</p>
-        <p>Sign in to sync notes and cues across devices. Audio and recordings stay local.</p>
-        <div class="recording-actions">
-          <button id="sync-signin" type="button">Sign in with Google</button>
-          <button id="sync-signout" type="button" hidden>Sign out</button>
-          <button id="sync-retry" type="button">Retry sync</button>
-          <button id="sync-import" type="button" hidden>Import this device’s local notes and cues</button>
-        </div>
-        <p id="sync-status" role="status">Notes and cues are saved on this device.</p>
-        <p>To import older cues, first open their songs while signed out. Each account keeps its own local copy; signing out returns to your separate local notes.</p>
-        <div id="sync-conflicts"></div>
-      </section>
       <section class="recording-folder" aria-labelledby="recording-heading">
-        <h4 id="recording-heading">Recording folder</h4>
+        <h3 id="recording-heading">Recording folder</h3>
         <p>Choose a folder for automatic recording copies. Save test WAV checks access with a one-second silent file.</p>
         <p id="recording-name">No folder selected</p>
         <div class="recording-actions"><button id="recording-choose" type="button" disabled>Choose folder</button><button id="recording-test" type="button" disabled>Save test WAV</button><button id="recording-retry" type="button" hidden>Retry save</button><button id="recording-download" type="button" hidden>Download pending file</button><button id="recording-disconnect" type="button" disabled>Disconnect folder</button></div>

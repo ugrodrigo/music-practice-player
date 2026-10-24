@@ -4,6 +4,13 @@ import { startAppCheck } from './firebase-app-check.js';
 const $ = id => document.getElementById(id);
 const sync = window.PracticeSync;
 let auth, api, db, initializing, authReady = false;
+const avatar = $('account-avatar-image');
+const avatarFallback = $('account-avatar-fallback');
+let avatarURL = '';
+avatar.addEventListener('load', () => {
+  if (avatarURL && avatar.currentSrc === avatarURL) { avatar.hidden = false; avatarFallback.hidden = true; }
+});
+avatar.addEventListener('error', () => { avatar.hidden = true; avatarFallback.hidden = false; });
 function message(error) {
   const messages = {
     'auth/unauthorized-domain': 'Add this hostname to Firebase Authentication → Settings → Authorized domains.',
@@ -17,10 +24,30 @@ function message(error) {
 }
 function render() {
   const state = sync.state();
+  const user = auth?.currentUser;
+  const signedIn = !!user;
+  const name = user?.displayName || user?.email?.split('@')[0] || 'Guest';
+  $('account-name').textContent = name;
+  $('account-toggle').setAttribute('aria-label', signedIn ? `Account menu for ${name}` : 'Open account menu');
+  $('account-guest-icon').hidden = signedIn;
+  $('account-initial').hidden = !signedIn;
+  $('account-initial').textContent = signedIn ? name.trim().charAt(0).toUpperCase() || '?' : '';
+  const photo = signedIn && /^https:\/\//i.test(user.photoURL || '') ? user.photoURL : '';
+  if (photo !== avatarURL) {
+    avatarURL = photo;
+    avatar.hidden = true;
+    avatarFallback.hidden = false;
+    if (photo) avatar.src = photo;
+    else avatar.removeAttribute('src');
+  }
+  $('account-signed-in').hidden = !signedIn;
+  document.querySelector('.account-intro').hidden = signedIn;
+  $('account-attention').hidden = !state.error && !state.conflicts.length;
+  if (state.conflicts.length) $('account-sync-details').open = true;
   $('sync-import').hidden = state.owner === 'guest';
-  $('sync-signout').hidden = !auth?.currentUser;
-  $('sync-signin').hidden = !!auth?.currentUser;
-  $('sync-account').textContent = auth?.currentUser?.email || (state.owner === 'guest' ? 'Not signed in' : 'Saved account — reconnect to sync');
+  $('sync-signout').hidden = !signedIn;
+  $('sync-signin').hidden = signedIn;
+  $('sync-account').textContent = user?.email || (state.owner === 'guest' ? 'Not signed in' : 'Saved account — reconnect to sync');
   $('sync-status').textContent = state.error || (state.owner === 'guest' ? 'Notes and cues are saved on this device.'
     : state.conflicts.length ? 'Conflicting edits need your review below.'
     : !navigator.onLine ? `Offline. ${state.pending} change(s) waiting to sync.`

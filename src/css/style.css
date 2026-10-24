@@ -318,7 +318,7 @@ kbd { display: inline-block; padding: 3px 6px; border: 1px solid #424b42; border
 #audio-memory-status { font-size: 11px; color: var(--muted); }
 
 .recording-folder { border-bottom: 1px solid var(--line); margin-bottom: 14px; padding-bottom: 14px; font-size: 12px; }
-.recording-folder h4 { margin: 0 0 8px; font-size: 14px; }
+.recording-folder h3 { margin: 0 0 8px; font-size: 14px; }
 .recording-folder p { margin: 8px 0; color: var(--muted); overflow-wrap: anywhere; }
 .recording-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .recording-actions button { min-height: 44px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: #252d26; }
@@ -432,7 +432,8 @@ body[data-app-mode="settings"] .practice-content, body[data-app-mode="settings"]
 #lyrics-display-config { padding: 22px; max-width: 760px; width: 100%; margin: 0 auto; overflow: visible; border: 1px solid var(--line); }
 body[data-app-mode="settings"] .workspace { padding-bottom: 24px; }
 
-.sticky-header { isolation: isolate; }
+.sticky-header { position: relative; z-index: 25; isolation: isolate; }
+@media (max-width: 760px) { .sticky-header { position: fixed; } }
 /* Share the viewport-aligned page gradient, with an opaque base to hide scrolling content.
    Extend through the workspace gutters without changing the header's content width. */
 .sticky-header::before { content: ""; position: absolute; inset: 0 calc(50% - 50vw); z-index: -1; background: var(--page-background) fixed; pointer-events: none; }
@@ -443,7 +444,9 @@ body[data-app-mode="settings"] .workspace { padding-bottom: 24px; }
 /* Equal side columns keep the title centered with or without the install action. */
 .app-header { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); margin-bottom: 10px; gap: 12px; }
 .app-header > .app-navigation { justify-self: start; }
-.app-header > #install-app { justify-self: end; white-space: nowrap; }
+.app-header > .header-actions { justify-self: end; }
+.header-actions { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.header-actions #install-app { white-space: nowrap; }
 .app-navigation { position: relative; display: flex; align-items: center; gap: 12px; min-width: 0; }
 #app-menu-toggle { display: grid; place-items: center; flex-shrink: 0; width: 64px; height: 44px; padding: 4px; border: 1px solid #d8ee9660; border-radius: 12px; background: var(--accent); color: #23321a; }
 .app-header #app-mode-title { font-size: 22px; line-height: 1.2; letter-spacing: -.4px; text-align: center; }
@@ -467,19 +470,35 @@ body[data-app-mode="settings"] .workspace { padding-bottom: 24px; }
 #notes-text .note-size-4 { font-size: 1.25em; }
 #notes-text .note-size-5 { font-size: 1.5em; }
 @media (max-width: 420px) {
-  .app-header { gap: 8px; }
-  .app-header #app-mode-title { font-size: 19px; }
+  .app-header { grid-template-columns: 52px minmax(0, 1fr) auto; gap: 8px; }
+  .app-header #app-mode-title { min-width: 0; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .app-navigation { gap: 10px; }
+  #app-menu-toggle { width: 52px; }
+  #app-menu-toggle svg { width: 44px; }
+  .header-actions { gap: 5px; }
 }
 @media (max-width: 760px) {
   #install-app { padding: 8px; min-height: 44px; font-size: 12px; }
   .install-app-suffix { display: none; }
 }
 
-.sync-settings { padding: 18px 0; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
-.sync-settings p { margin: 10px 0; color: var(--muted); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
-.sync-settings button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #293229; }
-.sync-settings #sync-status { color: var(--accent); }
+#account-toggle { position: relative; display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; overflow: visible; border: 2px solid #536342; border-radius: 50%; background: #293229; color: #e5edce; }
+#account-toggle:hover, #account-toggle[aria-expanded="true"] { border-color: var(--accent); }
+#account-avatar-image { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+#account-avatar-fallback { display: grid; place-items: center; font-size: 16px; font-weight: 700; }
+#account-attention { position: absolute; right: -4px; bottom: -3px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #d8ee96; color: #17200e; font-size: 12px; font-weight: 800; }
+#account-panel { position: absolute; top: calc(100% + 8px); right: 0; z-index: 40; width: min(350px, calc(100vw - 40px)); max-height: calc(100dvh - 80px); overflow-y: auto; padding: 18px; border: 1px solid #536342; border-radius: 14px; background: #1a1f1c; box-shadow: 0 12px 32px #0009; }
+#account-panel h2 { font-size: 17px; margin: 0 0 14px; }
+#account-panel p { margin: 8px 0; color: var(--muted); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+#account-panel #account-name { margin-bottom: 0; color: inherit; font-size: 16px; font-weight: 600; }
+#account-panel #sync-account { margin-top: 2px; }
+#account-panel #sync-status { color: var(--accent); }
+#account-panel button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #293229; text-align: left; }
+#account-panel #sync-signin { display: flex; align-items: center; justify-content: center; width: 100%; margin-top: 12px; background: var(--accent); color: #253019; font-weight: 700; text-align: center; }
+#account-panel #sync-signout { width: 100%; margin-top: 14px; }
+#account-sync-details { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+#account-sync-details summary { min-height: 36px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.account-sync-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 .sync-conflict { margin-top: 18px; padding: 14px; border: 1px solid #a89058; border-radius: 10px; }
 .sync-conflict textarea { display: block; width: 100%; min-height: 90px; background: #111a14; color: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 8px; font: inherit; }
 .sync-conflict button { margin: 8px 8px 0 0; }
