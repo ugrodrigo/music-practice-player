@@ -28,6 +28,8 @@ Playback, speed controls, cues, waveform analysis, and previously cached lyrics 
 
 Signed-out cues and lyrics belong to this browser and site address. Google sign-in enables notes and cue sync through Firebase; existing local notes and cues require an explicit import. See [Firebase setup and testing](docs/FIREBASE_SETUP.md). Lyrics and audio remain local. Clearing site data removes local copies, pending edits and the offline app cache. Background/lock-screen playback and installation still need verification on a physical Android phone.
 
+The Notes tab supports bold, italic, underline, four text sizes, and clearing formatting. Select text before using the toolbar, or use Ctrl+B, Ctrl+I, and Ctrl+U while typing. Notes save automatically and formatted notes sync with the same account. Existing plain notes remain readable. Press Escape while editing a note or using a text field or selector to return to player keyboard shortcuts.
+
 Updates show **Update & reload** and wait for your tap, so they do not reload the app during practice. Developers must bump `VERSION` in `sw.js` whenever a cached app file changes. The service worker caches only the listed app files and removes only older caches belonging to this app's scope. Serve through HTTPS for phone installation; localhost also works for development on the same computer. Opening `index.html` directly continues to work as a local player, but does not install the service worker.
 
 ## Controls

@@ -96,6 +96,8 @@ try:
       check(!a.sync.state().pending && !a.sync.state().conflicts.length, 'Own echo is acknowledged');
       a.sync.put('notes', 'new notes'); await a.sync.flush();
       check(b.sync.get('notes') === 'new notes', 'Second device receives update');
+      a.sync.put('notes', {format: 'html-v1', html: '<strong>formatted notes</strong>'}); await a.sync.flush();
+      check(b.sync.get('notes').html === '<strong>formatted notes</strong>', 'Formatted notes sync');
       a.sync.put('track-a-cue-0', {time: 3, name: 'Intro'});
       b.sync.put('track-a-cue-1', {time: 8, name: 'Verse'});
       await a.sync.flush(); await b.sync.flush();
